@@ -1,5 +1,5 @@
 generated: '2026-10-13'
-method: none
+method: searched
 source:
 - https://zapier.com/apps/venice-ai/integrations
 - https://zapier.com/apps/venice/integrations
@@ -16,5 +16,24 @@ checked:
 - https://zapier.com/apps/venice/integrations
 summary: null
 marketplace_apps: []
-edges: []
+edges:
+- partner_name: OpenAI
+  partner: openai
+  partner_match: domain
+  type: contract
+  channel: provider-built
+  relationship: compatible
+  direction: provider-built
+  evidence: https://github.com/api-evangelist/venice-ai/blob/main/openapi/venice-ai-openapi.yml#L10
+  contract_reference:
+    repo: venice-ai
+    spec_file: venice-ai-openapi.yml
+    property: description
+    value: OpenAI-compatible
+    note: 'venice-ai declares OpenAI compatibility: ''Venice.ai is an OpenAI-compatible inference API supporting
+      text, image,'''
+    detected_by: sweep-model-routing.py
+    detected: '2026-10-13'
+  detected_by: sweep-model-routing.py
+  first_seen: '2026-10-13'
 templates: []
