@@ -1,0 +1,29 @@
+name: Venice.ai Packages
+generated: '2026-10-13'
+method: searched
+source: https://github.com/veniceai
+packages:
+- name: '@veniceai/mcp-server'
+  registry: npm
+  url: https://www.npmjs.com/package/@veniceai/mcp-server
+  language: TypeScript
+  official: true
+  version: 0.2.0
+  published: '2026-05-16'
+  repo: https://github.com/veniceai/venice-mcp-server
+- name: veniceai-cli
+  registry: npm
+  url: https://www.npmjs.com/package/veniceai-cli
+  language: TypeScript
+  official: true
+  version: 2.1.0
+  published: '2026-03-18'
+  repo: https://github.com/veniceai/venice-cli
+- name: venice-x402-client
+  registry: npm
+  url: https://www.npmjs.com/package/venice-x402-client
+  language: TypeScript
+  official: true
+  version: 0.2.0
+  published: '2026-04-12'
+  repo: https://github.com/veniceai/x402-client

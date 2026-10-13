@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/venice-ai/main/json-schema/venice-ai-generate-image-request-schema.json",
+  "title": "GenerateImageRequest",
+  "x-generated": "2026-10-13",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/venice-ai-openapi.yml#/components/schemas/GenerateImageRequest",
+  "type": "object",
+  "properties": {
+    "anon_user_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[\\x20-\\x7E]+$",
+      "description": "Optional identifier for the API customer's end user. Combined with the Venice user id when attributing the request to upstream providers. Distinct from the discarded OpenAI `user` field. Must be printable ASCII and must not contain `||`."
+    },
+    "cfg_scale": {
+      "type": "number",
+      "minimum": 0,
+      "exclusiveMinimum": true,
+      "maximum": 20,
+      "description": "CFG scale parameter. Higher values lead to more adherence to the prompt."
+    },
+    "embed_exif_metadata": {
+      "type": "boolean",
+      "default": false,
+      "description": "Embed prompt generation information into the image's EXIF metadata."
+    },
+    "format": {
+      "type": "string",
+      "enum": [
+        "jpeg",
+        "png",
+        "webp"
+      ],
+      "default": "webp",
+      "description": "The image format to return. WebP are smaller and optimized for web use. PNG are higher quality but larger in file size. "
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 0,
+      "exclusiveMinimum": true,
+      "maximum": 1280,
+      "default": 1024,
+      "description": "Height of the generated image."
+    },
+    "hide_watermark": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to hide the Venice watermark. Venice may ignore this parameter for certain generated content."
+    },
+    "inpaint": {
+      "nullable": true,
+      "description": "This feature is deprecated and was disabled on May 19th, 2025. A revised in-painting API will be launched in the near future.",
+      "deprecated": true
+    },
+    "lora_strength": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Lora strength for the model. Only applies if the model uses additional Loras."
+    },
+    "model": {
+      "type": "string",
+      "description": "The model to use for image generation."
+    },
+    "negative_prompt": {
+      "type": "string",
+      "maxLength": 7500,
+      "description": "A description of what should not be in the image. Character limit is model specific and is listed in the promptCharacterLimit constraint in the model list endpoint."
+    },
+    "prompt": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 7500,
+      "description": "The description for the image. Character limit is model specific and is listed in the promptCharacterLimit setting in the model list endpoint."
+    },
+    "return_binary": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to return binary image data instead of base64."
+    },
+    "variants": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4,
+      "description": "Number of images to generate (1–4). Only supported when return_binary is false."
+    },
+    "safe_mode": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to blur images classified as adult content. Defaults to true. Set to false to receive unblurred output. No Pro subscription is required, and the mature filter setting in the Venice app does not affect this. The x-venice-is-blurred response header reports whether the returned image was blurred."
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": -999999999,
+      "maximum": 999999999,
+      "default": 0,
+      "description": "Random seed for generation. If not provided, a random seed will be used."
+    },
+    "steps": {
+      "type": "integer",
+      "default": 8,
+      "description": "Number of inference steps. This model does not support steps - this field is ignored."
+    },
+    "style_preset": {
+      "type": "string",
+      "description": "An image style to apply to the image. Visit https://docs.venice.ai/api-reference/endpoint/image/styles for more details."
+    },
+    "aspect_ratio": {
+      "type": "string",
+      "description": "Aspect ratio (utilized by certain image models including Nano Banana). Examples: \"1:1\", \"16:9\"."
+    },
+    "resolution": {
+      "type": "string",
+      "description": "Resolution (utilized by certain image models including Nano Banana). Examples: \"1K\", \"2K\", \"4K\"."
+    },
+    "quality": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "description": "Output quality for supported models (e.g. GPT Image 2 / GPT Image 2 Edit). Higher values can increase the final request charge. See the model list for supported options."
+    },
+    "enable_web_search": {
+      "type": "boolean",
+      "description": "Enable web search for the image generation task. This will allow the model to use the latest information from the web to generate the image. Only supported by certain models. If web search is used, additional credits are getting charged."
+    },
+    "disable_prompt_optimization_thinking": {
+      "type": "boolean",
+      "description": "Skip the model's prompt-optimization thinking step for faster generation. Only supported by models with `supportsOptimizePromptThinking`; ignored by others. Omit to use the model default."
+    },
+    "enhance_prompt": {
+      "type": "boolean",
+      "description": "Rewrite the prompt before generation to add clarifying visual detail. Additional credits are charged when a rewrite is generated. Adds up to ~30 seconds before generation starts. When enhancement is applied, the final prompt is returned URL-encoded in the `x-venice-enhanced-prompt` response header. Defaults to false."
+    },
+    "width": {
+      "type": "integer",
+      "minimum": 0,
+      "exclusiveMinimum": true,
+      "maximum": 1280,
+      "default": 1024,
+      "description": "Width of the generated image."
+    },
+    "style_references": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "image": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "string",
+                "format": "uri"
+              }
+            ],
+            "description": "A style reference image as a base64-encoded string (raw or data URI) or a URL starting with http:// or https://. Must be less than 8MB."
+          },
+          "strength": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 1,
+            "description": "How strongly the reference guides the output (0.1–1). Defaults to 0.5. Ignored by models where supportsStyleReferenceStrength is false."
+          }
+        },
+        "required": [
+          "image"
+        ],
+        "additionalProperties": false
+      },
+      "description": "Style reference images that guide the aesthetic of the generated image. Only supported by models with `supportsStyleReferences: true` (see GET /api/v1/models for the per-model `maxStyleReferences` limit)."
+    }
+  },
+  "required": [
+    "model",
+    "prompt"
+  ],
+  "additionalProperties": false
+}

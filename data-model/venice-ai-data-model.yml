@@ -1,0 +1,139 @@
+generated: '2026-10-13'
+method: derived
+generator: derive-data-model.py
+source:
+- openapi/venice-ai-openapi.yml
+notation: has_one = property $ref; has_many = array of $ref; belongs_to = <entity>_id field
+summary:
+  entities: 49
+  entities_in_spec: 49
+  relationships: 0
+entities:
+- name: ApiKeyIpRestrictedError
+  fields: 1
+- name: BackgroundRemoveImageMultipartRequest
+  fields: 2
+  description: Remove the background from an uploaded image file.
+- name: BillingBalanceResponse
+  fields: 4
+  description: Current balance information for the authenticated user
+- name: BillingUsageAnalyticsRequest
+  fields: 3
+- name: BillingUsageAnalyticsResponse
+  fields: 8
+  description: Aggregated usage analytics response with breakdowns by date, model, and API key
+- name: BillingUsageHistoryRequest
+  fields: 5
+- name: BillingUsageHistoryResponse
+  fields: 2
+  description: The response schema for the billing usage history endpoint
+- name: ChatCompletionContentPartInputAudio
+  fields: 3
+  description: Audio input message type for models that support audio analysis. Audio must be base64-encoded.
+- name: ChatCompletionContentPartVideoUrl
+  fields: 3
+  description: Video URL message type for models that support video analysis. Supports both direct URLs and base64-encoded
+    data URLs.
+- name: ChatCompletionRequest
+  fields: 38
+- name: CompleteAudioRequest
+  fields: 2
+- name: CompleteVideoRequest
+  fields: 2
+- name: CompleteVoiceChangerRequest
+  fields: 2
+- name: ContentViolationError
+  fields: 2
+- name: CreateClonedVoiceRequestSchema
+  fields: 2
+  description: Request to create a cloned voice from an audio sample. The returned `vv_<id>` handle is passed back
+    as the `voice` parameter on POST /v1/audio/speech.
+- name: CreateDecisionRequestSchema
+  fields: 3
+  description: Evaluate a state against a map of typed questions and get back structured answers, one per question.
+- name: CreateEmbeddingRequestSchema
+  fields: 5
+  description: Create embeddings for the supplied input.
+- name: CreateSpeechRequestSchema
+  fields: 10
+  description: Request to generate audio from text.
+- name: CreateTranscriptionRequestSchema
+  fields: 5
+  description: Request to transcribe audio to text.
+- name: DetailedError
+  fields: 2
+- name: EditImageRequest
+  fields: 11
+  description: Edit an image based on the supplied prompt.
+- name: GenerateImageRequest
+  fields: 25
+- name: ModelCompatibilitySchema
+  fields: 0
+  description: List of available models
+- name: ModelResponse
+  fields: 8
+  description: Response schema for model information
+- name: ModelTraitSchema
+  fields: 0
+  description: List of available models
+- name: MultiEditImageMultipartRequest
+  fields: 11
+  description: Edit an image by compositing multiple layered input image files (up to the per-model maximum) with
+    a single prompt. Only file uploads are supported with multipart/form-data.
+- name: MultiEditImageRequest
+  fields: 11
+  description: Edit an image by compositing multiple layered input images (up to the per-model maximum) with a single
+    prompt. Supports base64-encoded strings and URLs.
+- name: PayloadTooLargeError
+  fields: 2
+- name: ProviderContentPolicyError
+  fields: 1
+- name: QueueAudioRequest
+  fields: 10
+- name: QueueVideoRequest
+  fields: 37
+  description: Request body for video generation. Available fields and valid values vary by model.
+- name: QueueVoiceChangerRequest
+  fields: 6
+- name: QuoteAudioRequest
+  fields: 3
+- name: QuoteVideoRequest
+  fields: 11
+  description: Request body for video price quote. Available fields and valid values vary by model.
+- name: QuoteVoiceChangerRequest
+  fields: 2
+- name: ResponsesRequest
+  fields: 17
+  description: Request body for the Responses API endpoint. E2EE-capable models are not supported on /api/v1/responses;
+    use /api/v1/chat/completions with the required E2EE headers instead.
+- name: ResponsesResponse
+  fields: 9
+  description: Response from the Responses API endpoint.
+- name: RetrieveAudioRequest
+  fields: 3
+- name: RetrieveVideoRequest
+  fields: 3
+- name: RetrieveVoiceChangerRequest
+  fields: 3
+- name: SimpleGenerateImageRequest
+  fields: 13
+- name: StandardError
+  fields: 1
+- name: TextParserRequest
+  fields: 2
+  description: Request to parse and extract text from a document file.
+- name: TextParserResponse
+  fields: 2
+  description: Text parser response containing extracted text and token count.
+- name: UpscaleImageRequest
+  fields: 3
+  description: Upscale an image to a higher resolution.
+- name: WebScrapeRequest
+  fields: 1
+- name: WebScrapeResponse
+  fields: 3
+- name: WebSearchRequest
+  fields: 3
+- name: WebSearchResponse
+  fields: 2
+relationships: []

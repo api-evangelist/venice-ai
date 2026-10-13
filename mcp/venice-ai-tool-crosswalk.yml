@@ -1,0 +1,194 @@
+name: Venice.ai Tool Crosswalk
+generated: '2026-10-13'
+method: derived
+source: https://docs.venice.ai/guides/integrations/venice-mcp
+surfaces:
+  openapi: openapi/venice-ai-openapi.yml
+  mcp: npx -y @veniceai/mcp-server@0.2.0
+crosswalk:
+- tool: venice_chat
+  category: chat
+  rest:
+  - createChatCompletion
+  binding: direct
+  confidence: high
+- tool: venice_responses
+  category: responses
+  rest:
+  - createResponse
+  binding: direct
+  confidence: high
+- tool: venice_embeddings
+  category: embeddings
+  rest:
+  - createEmbedding
+  binding: direct
+  confidence: high
+- tool: venice_chat_with_character
+  category: chat
+  rest:
+  - createChatCompletion
+  - getCharacterBySlug
+  binding: composite
+  confidence: medium
+- tool: venice_image_generate
+  category: image
+  rest:
+  - generateImage
+  binding: direct
+  confidence: high
+- tool: venice_image_edit
+  category: image
+  rest:
+  - editImage
+  binding: direct
+  confidence: high
+- tool: venice_image_multi_edit
+  category: image
+  rest:
+  - multiEditImage
+  binding: direct
+  confidence: high
+- tool: venice_image_upscale
+  category: image
+  rest:
+  - upscaleImage
+  binding: direct
+  confidence: high
+- tool: venice_image_remove_bg
+  category: image
+  rest:
+  - backgroundRemoveImage
+  binding: direct
+  confidence: high
+- tool: venice_video_generate
+  category: video
+  rest:
+  - queueVideo
+  binding: direct
+  confidence: high
+- tool: venice_video_status
+  category: video
+  rest:
+  - retrieveVideo
+  binding: direct
+  confidence: high
+- tool: venice_video_complete
+  category: video
+  rest:
+  - completeVideo
+  binding: direct
+  confidence: high
+- tool: venice_video_quote
+  category: video
+  rest:
+  - quoteVideo
+  binding: direct
+  confidence: high
+- tool: venice_tts
+  category: tts
+  rest:
+  - createSpeech
+  binding: direct
+  confidence: high
+- tool: venice_asr
+  category: asr
+  rest:
+  - createTranscription
+  binding: direct
+  confidence: high
+- tool: venice_audio_quote
+  category: audio
+  rest:
+  - quoteAudio
+  binding: direct
+  confidence: high
+- tool: venice_music_generate
+  category: music
+  rest:
+  - queueAudio
+  binding: direct
+  confidence: high
+- tool: venice_music_status
+  category: music
+  rest:
+  - retrieveAudio
+  binding: direct
+  confidence: high
+- tool: venice_music_complete
+  category: music
+  rest:
+  - completeAudio
+  binding: direct
+  confidence: high
+- tool: venice_web_search
+  category: web
+  rest:
+  - webSearch
+  binding: direct
+  confidence: high
+- tool: venice_web_scrape
+  category: web
+  rest:
+  - webScrape
+  binding: direct
+  confidence: high
+- tool: venice_text_parser
+  category: text
+  rest:
+  - createTextParser
+  binding: direct
+  confidence: high
+- tool: venice_list_models
+  category: list
+  rest:
+  - listModels
+  binding: direct
+  confidence: high
+- tool: venice_list_characters
+  category: list
+  rest:
+  - listCharacters
+  binding: direct
+  confidence: high
+- tool: venice_crypto_rpc
+  category: crypto
+  rest:
+  - cryptoRpcProxy
+  binding: direct
+  confidence: high
+mcp_only:
+- tool: venice_image_styles
+  reason: no single public REST operation identified for this tool from the docs description
+- tool: venice_voice_clone
+  reason: no single public REST operation identified for this tool from the docs description
+rest_only:
+- simpleGenerateImage
+- listModelTraits
+- listModelCompatibilityMapping
+- getApiKeys
+- deleteApiKey
+- createApiKey
+- updateApiKey
+- getApiKeyById
+- getApiKeyRateLimits
+- getApiKeyRateLimitLogs
+- getApiKeyGenerateWeb3Key
+- postApiKeyGenerateWeb3Key
+- getCharacterReviews
+- createDecision
+- createDecisionSystemOne
+- createClonedVoice
+- createVideoTranscription
+- queueVoiceChanger
+- quoteVoiceChanger
+- retrieveVoiceChanger
+- completeVoiceChanger
+- getBillingBalance
+- getBillingUsage
+- getBillingUsageAnalytics
+- getBillingUsageHistory
+- listCryptoRpcNetworks
+- getX402Balance
+- topUpX402Balance
+- getX402Transactions

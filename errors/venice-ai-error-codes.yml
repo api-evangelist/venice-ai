@@ -1,0 +1,211 @@
+name: Venice.ai Error Codes
+generated: '2026-10-13'
+method: searched
+source: https://docs.venice.ai/api-reference/error-codes
+format: json
+envelope:
+  error: string message (OpenAI-style error object on some OpenAI-compatible endpoints)
+  details: optional validation detail
+  issues: optional
+problems:
+- status: 401
+  title: AUTHENTICATION_FAILED
+  type: AUTHENTICATION_FAILED
+  description: Authentication failed
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 401
+  title: AUTHENTICATION_FAILED_INACTIVE_KEY
+  type: AUTHENTICATION_FAILED_INACTIVE_KEY
+  description: Authentication failed - Pro subscription is inactive. Please upgrade your subscription to continue using the API
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 401
+  title: X402_INVALID_SIGN_IN
+  type: X402_INVALID_SIGN_IN
+  description: Invalid Sign-in-with-x signature
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 401
+  title: PRO_ONLY_MODEL
+  type: PRO_ONLY_MODEL
+  description: This model is only available to Pro users
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 402
+  title: INSUFFICIENT_BALANCE
+  type: INSUFFICIENT_BALANCE
+  description: Insufficient USD or Diem balance to complete request. Visit [https://venice.ai/settings/api](https://venice.ai/settings/api) to add credits.
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 402
+  title: API_KEY_DIEM_SPEND_LIMIT_EXCEEDED
+  type: API_KEY_DIEM_SPEND_LIMIT_EXCEEDED
+  description: API key DIEM spend limit exceeded. Your account may still have DIEM balance, but this API key has reached its configured DIEM spending limit.
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 402
+  title: API_KEY_USD_SPEND_LIMIT_EXCEEDED
+  type: API_KEY_USD_SPEND_LIMIT_EXCEEDED
+  description: API key USD spend limit exceeded. Your account may still have USD balance, but this API key has reached its configured USD spending limit.
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 403
+  title: UNAUTHORIZED
+  type: UNAUTHORIZED
+  description: Unauthorized access
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 403
+  title: API_ACCESS_DISABLED
+  type: API_ACCESS_DISABLED
+  description: API access has been disabled for this account. Please contact [support@venice.ai](mailto:support@venice.ai)
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 403
+  title: X402_WALLET_MISMATCH
+  type: X402_WALLET_MISMATCH
+  description: You can only access resources for your own wallet
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 400
+  title: INVALID_REQUEST
+  type: INVALID_REQUEST
+  description: Invalid request parameters
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 400
+  title: INVALID_MODEL
+  type: INVALID_MODEL
+  description: Invalid model specified
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 400
+  title: REQUEST_ID_NOT_FOUND
+  type: REQUEST_ID_NOT_FOUND
+  description: Request ID is invalid.
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 400
+  title: INVALID_AUDIO_FORMAT
+  type: INVALID_AUDIO_FORMAT
+  description: Invalid audio format. Supported formats are WAV and MP3.
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 400
+  title: INVALID_VIDEO_FORMAT
+  type: INVALID_VIDEO_FORMAT
+  description: Invalid video format. Supported formats include MP4, MOV, WebM, MKV, AVI, and others.
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 400
+  title: CORRUPTED_IMAGE
+  type: CORRUPTED_IMAGE
+  description: The image file is corrupted or unreadable
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 400
+  title: IMAGE_TOO_SMALL
+  type: IMAGE_TOO_SMALL
+  description: Image dimensions are too small
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 400
+  title: TOO_MANY_TOKENS
+  type: TOO_MANY_TOKENS
+  description: Your request exceeds the model's maximum context. Please reduce your prompt or completion length.
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 404
+  title: CHARACTER_NOT_FOUND
+  type: CHARACTER_NOT_FOUND
+  description: No character could be found from the provided character_slug
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 404
+  title: MODEL_NOT_FOUND
+  type: MODEL_NOT_FOUND
+  description: Specified model not found
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 404
+  title: MEDIA_NOT_FOUND
+  type: MEDIA_NOT_FOUND
+  description: Media could not be found. Request may be invalid, expired, or deleted.
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 413
+  title: PAYLOAD_TOO_LARGE
+  type: PAYLOAD_TOO_LARGE
+  description: The request payload is too large. Please reduce the size of your request.
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 415
+  title: INVALID_CONTENT_TYPE
+  type: INVALID_CONTENT_TYPE
+  description: Invalid request content-type
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 422
+  title: VIDEO_DURATION_TOO_LONG
+  type: VIDEO_DURATION_TOO_LONG
+  description: Video duration exceeds the maximum allowed.
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 422
+  title: VIDEO_DURATION_TOO_SHORT
+  type: VIDEO_DURATION_TOO_SHORT
+  description: Video duration is too short.
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 422
+  title: IMAGE_TOO_LARGE
+  type: IMAGE_TOO_LARGE
+  description: Image dimensions exceed the maximum allowed.
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 422
+  title: CONTENT_POLICY_VIOLATION
+  type: CONTENT_POLICY_VIOLATION
+  description: Your prompt violates the content policy of Venice.ai or the model provider
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 422
+  title: ASR_UPSTREAM_VALIDATION_FAILED
+  type: ASR_UPSTREAM_VALIDATION_FAILED
+  description: 'The audio could not be processed for transcription. Common causes: zero-length, silent, corrupt, or unsupported-language audio. Please verify the file and retry.'
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 429
+  title: RATE_LIMIT_EXCEEDED
+  type: RATE_LIMIT_EXCEEDED
+  description: Rate limit exceeded
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 429
+  title: MODEL_OVERLOADED
+  type: MODEL_OVERLOADED
+  description: The model is currently overloaded. Please try again later.
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 500
+  title: INFERENCE_FAILED
+  type: INFERENCE_FAILED
+  description: Inference processing failed
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 500
+  title: UPSCALE_FAILED
+  type: UPSCALE_FAILED
+  description: Image upscaling failed
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 500
+  title: IMAGE_EDIT_ERROR
+  type: IMAGE_EDIT_ERROR
+  description: Image edit failed
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 500
+  title: UNKNOWN_ERROR
+  type: UNKNOWN_ERROR
+  description: An unknown error occurred
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 502
+  title: TEE_ATTESTATION_FAILED
+  type: TEE_ATTESTATION_FAILED
+  description: TEE attestation request failed. The Trusted Execution Environment provider may be temporarily unavailable.
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 502
+  title: TEE_SIGNATURE_FAILED
+  type: TEE_SIGNATURE_FAILED
+  description: TEE signature request failed. The Trusted Execution Environment provider may be temporarily unavailable.
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 502
+  title: ASR_UPSTREAM_FAILED
+  type: ASR_UPSTREAM_FAILED
+  description: Audio transcription failed due to a temporary upstream error. Please retry.
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 503
+  title: MODEL_OFFLINE
+  type: MODEL_OFFLINE
+  description: The model is temporarily offline. Please try again later.
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 503
+  title: MODEL_AT_CAPACITY
+  type: MODEL_AT_CAPACITY
+  description: The model is at capacity. Please try again later.
+  remediation: See https://docs.venice.ai/api-reference/error-codes
+- status: 504
+  title: REQUEST_TIMEOUT
+  type: REQUEST_TIMEOUT
+  description: The request took too long to complete and was timed-out. For long-running non-streaming inference requests, use the streaming API by setting `stream=true`. Streaming requests that time out
+    before the first chunk instead report that the model did not start responding in time, usually under heavy load, and to retry or use a different model.
+  remediation: See https://docs.venice.ai/api-reference/error-codes

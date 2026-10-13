@@ -1,0 +1,732 @@
+{
+  "@context": {
+    "@vocab": "https://venice.ai/schema#",
+    "schema": "https://schema.org/",
+    "xsd": "http://www.w3.org/2001/XMLSchema#",
+    "dcterms": "http://purl.org/dc/terms/",
+    "venice": "https://venice.ai/schema#",
+    "StandardError": "venice:StandardError",
+    "error": {
+      "@id": "venice:error",
+      "@type": "xsd:string"
+    },
+    "DetailedError": "venice:DetailedError",
+    "details": {
+      "@id": "venice:details"
+    },
+    "ApiKeyIpRestrictedError": "venice:ApiKeyIpRestrictedError",
+    "ContentViolationError": "venice:ContentViolationError",
+    "suggested_prompt": {
+      "@id": "venice:suggested_prompt",
+      "@type": "xsd:string"
+    },
+    "ProviderContentPolicyError": "venice:ProviderContentPolicyError",
+    "PayloadTooLargeError": "venice:PayloadTooLargeError",
+    "code": {
+      "@id": "venice:code",
+      "@type": "xsd:string"
+    },
+    "ChatCompletionRequest": "venice:ChatCompletionRequest",
+    "frequency_penalty": {
+      "@id": "venice:frequency_penalty",
+      "@type": "xsd:decimal"
+    },
+    "logprobs": {
+      "@id": "venice:logprobs",
+      "@type": "xsd:boolean"
+    },
+    "top_logprobs": {
+      "@id": "venice:top_logprobs",
+      "@type": "xsd:integer"
+    },
+    "max_completion_tokens": {
+      "@id": "venice:max_completion_tokens",
+      "@type": "xsd:integer"
+    },
+    "max_temp": {
+      "@id": "venice:max_temp",
+      "@type": "xsd:decimal"
+    },
+    "max_tokens": {
+      "@id": "venice:max_tokens",
+      "@type": "xsd:integer"
+    },
+    "messages": {
+      "@id": "venice:messages",
+      "@container": "@list"
+    },
+    "min_p": {
+      "@id": "venice:min_p",
+      "@type": "xsd:decimal"
+    },
+    "min_temp": {
+      "@id": "venice:min_temp",
+      "@type": "xsd:decimal"
+    },
+    "model": {
+      "@id": "venice:model",
+      "@type": "xsd:string"
+    },
+    "n": {
+      "@id": "venice:n",
+      "@type": "xsd:integer"
+    },
+    "presence_penalty": {
+      "@id": "venice:presence_penalty",
+      "@type": "xsd:decimal"
+    },
+    "prompt_cache_key": {
+      "@id": "venice:prompt_cache_key",
+      "@type": "xsd:string"
+    },
+    "prompt_cache_retention": {
+      "@id": "venice:prompt_cache_retention",
+      "@type": "xsd:string"
+    },
+    "repetition_penalty": {
+      "@id": "venice:repetition_penalty",
+      "@type": "xsd:decimal"
+    },
+    "reasoning": {
+      "@id": "venice:reasoning"
+    },
+    "reasoning_effort": {
+      "@id": "venice:reasoning_effort",
+      "@type": "xsd:string"
+    },
+    "seed": {
+      "@id": "venice:seed",
+      "@type": "xsd:integer"
+    },
+    "stop": {
+      "@id": "venice:stop"
+    },
+    "stop_token_ids": {
+      "@id": "venice:stop_token_ids",
+      "@container": "@list"
+    },
+    "stream": {
+      "@id": "venice:stream",
+      "@type": "xsd:boolean"
+    },
+    "stream_options": {
+      "@id": "venice:stream_options"
+    },
+    "temperature": {
+      "@id": "venice:temperature",
+      "@type": "xsd:decimal"
+    },
+    "top_k": {
+      "@id": "venice:top_k",
+      "@type": "xsd:integer"
+    },
+    "top_p": {
+      "@id": "venice:top_p",
+      "@type": "xsd:decimal"
+    },
+    "user": {
+      "@id": "venice:user",
+      "@type": "xsd:string"
+    },
+    "anon_user_id": {
+      "@id": "venice:anon_user_id",
+      "@type": "xsd:string"
+    },
+    "fallbacks": {
+      "@id": "venice:fallbacks",
+      "@container": "@list"
+    },
+    "store": {
+      "@id": "venice:store",
+      "@type": "xsd:boolean"
+    },
+    "verbosity": {
+      "@id": "venice:verbosity",
+      "@type": "xsd:string"
+    },
+    "text": {
+      "@id": "venice:text"
+    },
+    "include": {
+      "@id": "venice:include",
+      "@container": "@list"
+    },
+    "metadata": {
+      "@id": "venice:metadata"
+    },
+    "venice_parameters": {
+      "@id": "venice:venice_parameters"
+    },
+    "parallel_tool_calls": {
+      "@id": "venice:parallel_tool_calls",
+      "@type": "xsd:boolean"
+    },
+    "response_format": {
+      "@id": "venice:response_format"
+    },
+    "tool_choice": {
+      "@id": "venice:tool_choice"
+    },
+    "tools": {
+      "@id": "venice:tools",
+      "@container": "@list"
+    },
+    "ChatCompletionContentPartInputAudio": "venice:ChatCompletionContentPartInputAudio",
+    "cache_control": {
+      "@id": "venice:cache_control"
+    },
+    "input_audio": {
+      "@id": "venice:input_audio"
+    },
+    "type": {
+      "@id": "venice:type",
+      "@type": "xsd:string"
+    },
+    "ChatCompletionContentPartVideoUrl": "venice:ChatCompletionContentPartVideoUrl",
+    "video_url": {
+      "@id": "venice:video_url"
+    },
+    "ResponsesRequest": "venice:ResponsesRequest",
+    "input": {
+      "@id": "venice:input"
+    },
+    "instructions": {
+      "@id": "venice:instructions",
+      "@type": "xsd:string"
+    },
+    "max_output_tokens": {
+      "@id": "venice:max_output_tokens",
+      "@type": "xsd:integer"
+    },
+    "web_search": {
+      "@id": "venice:web_search",
+      "@type": "xsd:boolean"
+    },
+    "ResponsesResponse": "venice:ResponsesResponse",
+    "id": {
+      "@id": "venice:id",
+      "@type": "xsd:string"
+    },
+    "object": {
+      "@id": "venice:object",
+      "@type": "xsd:string"
+    },
+    "created_at": {
+      "@id": "venice:created_at",
+      "@type": "xsd:integer"
+    },
+    "status": {
+      "@id": "venice:status",
+      "@type": "xsd:string"
+    },
+    "incomplete_details": {
+      "@id": "venice:incomplete_details"
+    },
+    "output": {
+      "@id": "venice:output",
+      "@container": "@list"
+    },
+    "usage": {
+      "@id": "venice:usage"
+    },
+    "GenerateImageRequest": "venice:GenerateImageRequest",
+    "cfg_scale": {
+      "@id": "venice:cfg_scale",
+      "@type": "xsd:decimal"
+    },
+    "embed_exif_metadata": {
+      "@id": "venice:embed_exif_metadata",
+      "@type": "xsd:boolean"
+    },
+    "format": {
+      "@id": "venice:format",
+      "@type": "xsd:string"
+    },
+    "height": {
+      "@id": "venice:height",
+      "@type": "xsd:integer"
+    },
+    "hide_watermark": {
+      "@id": "venice:hide_watermark",
+      "@type": "xsd:boolean"
+    },
+    "inpaint": {
+      "@id": "venice:inpaint"
+    },
+    "lora_strength": {
+      "@id": "venice:lora_strength",
+      "@type": "xsd:integer"
+    },
+    "negative_prompt": {
+      "@id": "venice:negative_prompt",
+      "@type": "xsd:string"
+    },
+    "prompt": {
+      "@id": "venice:prompt",
+      "@type": "xsd:string"
+    },
+    "return_binary": {
+      "@id": "venice:return_binary",
+      "@type": "xsd:boolean"
+    },
+    "variants": {
+      "@id": "venice:variants",
+      "@type": "xsd:integer"
+    },
+    "safe_mode": {
+      "@id": "venice:safe_mode",
+      "@type": "xsd:boolean"
+    },
+    "steps": {
+      "@id": "venice:steps",
+      "@type": "xsd:integer"
+    },
+    "style_preset": {
+      "@id": "venice:style_preset",
+      "@type": "xsd:string"
+    },
+    "aspect_ratio": {
+      "@id": "venice:aspect_ratio",
+      "@type": "xsd:string"
+    },
+    "resolution": {
+      "@id": "venice:resolution",
+      "@type": "xsd:string"
+    },
+    "quality": {
+      "@id": "venice:quality",
+      "@type": "xsd:string"
+    },
+    "enable_web_search": {
+      "@id": "venice:enable_web_search",
+      "@type": "xsd:boolean"
+    },
+    "disable_prompt_optimization_thinking": {
+      "@id": "venice:disable_prompt_optimization_thinking",
+      "@type": "xsd:boolean"
+    },
+    "enhance_prompt": {
+      "@id": "venice:enhance_prompt",
+      "@type": "xsd:boolean"
+    },
+    "width": {
+      "@id": "venice:width",
+      "@type": "xsd:integer"
+    },
+    "style_references": {
+      "@id": "venice:style_references",
+      "@container": "@list"
+    },
+    "SimpleGenerateImageRequest": "venice:SimpleGenerateImageRequest",
+    "background": {
+      "@id": "venice:background",
+      "@type": "xsd:string"
+    },
+    "moderation": {
+      "@id": "venice:moderation",
+      "@type": "xsd:string"
+    },
+    "output_compression": {
+      "@id": "venice:output_compression",
+      "@type": "xsd:integer"
+    },
+    "output_format": {
+      "@id": "venice:output_format",
+      "@type": "xsd:string"
+    },
+    "size": {
+      "@id": "venice:size",
+      "@type": "xsd:string"
+    },
+    "style": {
+      "@id": "venice:style",
+      "@type": "xsd:string"
+    },
+    "UpscaleImageRequest": "venice:UpscaleImageRequest",
+    "creativity": {
+      "@id": "venice:creativity",
+      "@type": "xsd:decimal"
+    },
+    "image": {
+      "@id": "venice:image"
+    },
+    "scale": {
+      "@id": "venice:scale",
+      "@type": "xsd:decimal"
+    },
+    "EditImageRequest": "venice:EditImageRequest",
+    "modelId": {
+      "@id": "venice:modelId",
+      "@type": "xsd:string"
+    },
+    "MultiEditImageRequest": "venice:MultiEditImageRequest",
+    "images": {
+      "@id": "venice:images",
+      "@container": "@list"
+    },
+    "MultiEditImageMultipartRequest": "venice:MultiEditImageMultipartRequest",
+    "BackgroundRemoveImageMultipartRequest": "venice:BackgroundRemoveImageMultipartRequest",
+    "CreateEmbeddingRequestSchema": "venice:CreateEmbeddingRequestSchema",
+    "dimensions": {
+      "@id": "venice:dimensions",
+      "@type": "xsd:integer"
+    },
+    "encoding_format": {
+      "@id": "venice:encoding_format",
+      "@type": "xsd:string"
+    },
+    "CreateDecisionRequestSchema": "venice:CreateDecisionRequestSchema",
+    "state": {
+      "@id": "venice:state"
+    },
+    "questions": {
+      "@id": "venice:questions"
+    },
+    "CreateSpeechRequestSchema": "venice:CreateSpeechRequestSchema",
+    "language": {
+      "@id": "venice:language",
+      "@type": "xsd:string"
+    },
+    "speed": {
+      "@id": "venice:speed",
+      "@type": "xsd:decimal"
+    },
+    "streaming": {
+      "@id": "venice:streaming",
+      "@type": "xsd:boolean"
+    },
+    "voice": {
+      "@id": "venice:voice",
+      "@type": "xsd:string"
+    },
+    "CreateTranscriptionRequestSchema": "venice:CreateTranscriptionRequestSchema",
+    "file": {
+      "@id": "venice:file",
+      "@type": "xsd:string"
+    },
+    "timestamps": {
+      "@id": "venice:timestamps",
+      "@type": "xsd:boolean"
+    },
+    "CreateClonedVoiceRequestSchema": "venice:CreateClonedVoiceRequestSchema",
+    "QueueVideoRequest": "venice:QueueVideoRequest",
+    "consents": {
+      "@id": "venice:consents"
+    },
+    "duration": {
+      "@id": "venice:duration",
+      "@type": "xsd:string"
+    },
+    "omni_reference_task_type": {
+      "@id": "venice:omni_reference_task_type",
+      "@type": "xsd:string"
+    },
+    "upscale_factor": {
+      "@id": "venice:upscale_factor",
+      "@type": "xsd:integer"
+    },
+    "enhancement_model": {
+      "@id": "venice:enhancement_model",
+      "@type": "xsd:string"
+    },
+    "target_fps": {
+      "@id": "venice:target_fps",
+      "@type": "xsd:integer"
+    },
+    "softness": {
+      "@id": "venice:softness",
+      "@type": "xsd:decimal"
+    },
+    "realism": {
+      "@id": "venice:realism",
+      "@type": "xsd:decimal"
+    },
+    "sharp": {
+      "@id": "venice:sharp",
+      "@type": "xsd:decimal"
+    },
+    "compression": {
+      "@id": "venice:compression",
+      "@type": "xsd:decimal"
+    },
+    "noise": {
+      "@id": "venice:noise",
+      "@type": "xsd:decimal"
+    },
+    "halo": {
+      "@id": "venice:halo",
+      "@type": "xsd:decimal"
+    },
+    "grain": {
+      "@id": "venice:grain",
+      "@type": "xsd:decimal"
+    },
+    "recover_detail": {
+      "@id": "venice:recover_detail",
+      "@type": "xsd:decimal"
+    },
+    "h264_output": {
+      "@id": "venice:h264_output",
+      "@type": "xsd:boolean"
+    },
+    "slowdown_factor": {
+      "@id": "venice:slowdown_factor",
+      "@type": "xsd:integer"
+    },
+    "audio": {
+      "@id": "venice:audio",
+      "@type": "xsd:boolean"
+    },
+    "camera_trajectory": {
+      "@id": "venice:camera_trajectory",
+      "@container": "@list"
+    },
+    "image_url": {
+      "@id": "venice:image_url",
+      "@type": "xsd:string"
+    },
+    "end_image_url": {
+      "@id": "venice:end_image_url",
+      "@type": "xsd:string"
+    },
+    "image_strength": {
+      "@id": "venice:image_strength",
+      "@type": "xsd:decimal"
+    },
+    "audio_url": {
+      "@id": "venice:audio_url",
+      "@type": "xsd:string"
+    },
+    "reference_image_urls": {
+      "@id": "venice:reference_image_urls",
+      "@container": "@list"
+    },
+    "reference_video_urls": {
+      "@id": "venice:reference_video_urls",
+      "@container": "@list"
+    },
+    "reference_audio_urls": {
+      "@id": "venice:reference_audio_urls",
+      "@container": "@list"
+    },
+    "reference_document_urls": {
+      "@id": "venice:reference_document_urls",
+      "@container": "@list"
+    },
+    "elements": {
+      "@id": "venice:elements",
+      "@container": "@list"
+    },
+    "scene_image_urls": {
+      "@id": "venice:scene_image_urls",
+      "@container": "@list"
+    },
+    "keyframes": {
+      "@id": "venice:keyframes",
+      "@container": "@list"
+    },
+    "QuoteVideoRequest": "venice:QuoteVideoRequest",
+    "reference_video_total_duration": {
+      "@id": "venice:reference_video_total_duration",
+      "@type": "xsd:decimal"
+    },
+    "CompleteVideoRequest": "venice:CompleteVideoRequest",
+    "queue_id": {
+      "@id": "venice:queue_id",
+      "@type": "xsd:string"
+    },
+    "RetrieveVideoRequest": "venice:RetrieveVideoRequest",
+    "delete_media_on_completion": {
+      "@id": "venice:delete_media_on_completion",
+      "@type": "xsd:boolean"
+    },
+    "TextParserRequest": "venice:TextParserRequest",
+    "TextParserResponse": "venice:TextParserResponse",
+    "tokens": {
+      "@id": "venice:tokens",
+      "@type": "xsd:decimal"
+    },
+    "QueueAudioRequest": "venice:QueueAudioRequest",
+    "lyrics_prompt": {
+      "@id": "venice:lyrics_prompt",
+      "@type": "xsd:string"
+    },
+    "duration_seconds": {
+      "@id": "venice:duration_seconds"
+    },
+    "force_instrumental": {
+      "@id": "venice:force_instrumental",
+      "@type": "xsd:boolean"
+    },
+    "lyrics_optimizer": {
+      "@id": "venice:lyrics_optimizer",
+      "@type": "xsd:boolean"
+    },
+    "loop": {
+      "@id": "venice:loop",
+      "@type": "xsd:boolean"
+    },
+    "language_code": {
+      "@id": "venice:language_code",
+      "@type": "xsd:string"
+    },
+    "QuoteAudioRequest": "venice:QuoteAudioRequest",
+    "character_count": {
+      "@id": "venice:character_count",
+      "@type": "xsd:integer"
+    },
+    "CompleteAudioRequest": "venice:CompleteAudioRequest",
+    "RetrieveAudioRequest": "venice:RetrieveAudioRequest",
+    "QueueVoiceChangerRequest": "venice:QueueVoiceChangerRequest",
+    "remove_background_noise": {
+      "@id": "venice:remove_background_noise",
+      "@type": "xsd:boolean"
+    },
+    "QuoteVoiceChangerRequest": "venice:QuoteVoiceChangerRequest",
+    "CompleteVoiceChangerRequest": "venice:CompleteVoiceChangerRequest",
+    "RetrieveVoiceChangerRequest": "venice:RetrieveVoiceChangerRequest",
+    "BillingBalanceResponse": "venice:BillingBalanceResponse",
+    "canConsume": {
+      "@id": "venice:canConsume",
+      "@type": "xsd:boolean"
+    },
+    "consumptionCurrency": {
+      "@id": "venice:consumptionCurrency",
+      "@type": "xsd:string"
+    },
+    "balances": {
+      "@id": "venice:balances"
+    },
+    "diemEpochAllocation": {
+      "@id": "venice:diemEpochAllocation",
+      "@type": "xsd:decimal"
+    },
+    "BillingUsageAnalyticsRequest": "venice:BillingUsageAnalyticsRequest",
+    "lookback": {
+      "@id": "venice:lookback",
+      "@type": "xsd:string"
+    },
+    "startDate": {
+      "@id": "venice:startDate",
+      "@type": "xsd:string"
+    },
+    "endDate": {
+      "@id": "venice:endDate",
+      "@type": "xsd:string"
+    },
+    "BillingUsageAnalyticsResponse": "venice:BillingUsageAnalyticsResponse",
+    "byDate": {
+      "@id": "venice:byDate",
+      "@container": "@list"
+    },
+    "byModel": {
+      "@id": "venice:byModel",
+      "@container": "@list"
+    },
+    "byModelDaily": {
+      "@id": "venice:byModelDaily",
+      "@container": "@list"
+    },
+    "topModels": {
+      "@id": "venice:topModels",
+      "@container": "@list"
+    },
+    "byKey": {
+      "@id": "venice:byKey",
+      "@container": "@list"
+    },
+    "byKeyDaily": {
+      "@id": "venice:byKeyDaily",
+      "@container": "@list"
+    },
+    "topKeyNames": {
+      "@id": "venice:topKeyNames",
+      "@container": "@list"
+    },
+    "BillingUsageHistoryRequest": "venice:BillingUsageHistoryRequest",
+    "currency": {
+      "@id": "venice:currency",
+      "@type": "xsd:string"
+    },
+    "cursor": {
+      "@id": "venice:cursor",
+      "@type": "xsd:string"
+    },
+    "endTimestamp": {
+      "@id": "venice:endTimestamp",
+      "@type": "xsd:dateTime"
+    },
+    "pageSize": {
+      "@id": "venice:pageSize",
+      "@type": "xsd:integer"
+    },
+    "startTimestamp": {
+      "@id": "venice:startTimestamp",
+      "@type": "xsd:dateTime"
+    },
+    "BillingUsageHistoryResponse": "venice:BillingUsageHistoryResponse",
+    "data": {
+      "@id": "venice:data",
+      "@container": "@list"
+    },
+    "nextCursor": {
+      "@id": "venice:nextCursor",
+      "@type": "xsd:string"
+    },
+    "WebScrapeRequest": "venice:WebScrapeRequest",
+    "url": {
+      "@id": "venice:url",
+      "@type": "@id"
+    },
+    "WebSearchRequest": "venice:WebSearchRequest",
+    "query": {
+      "@id": "venice:query",
+      "@type": "xsd:string"
+    },
+    "limit": {
+      "@id": "venice:limit",
+      "@type": "xsd:integer"
+    },
+    "search_provider": {
+      "@id": "venice:search_provider",
+      "@type": "xsd:string"
+    },
+    "ModelResponse": "venice:ModelResponse",
+    "context_length": {
+      "@id": "venice:context_length",
+      "@type": "xsd:decimal"
+    },
+    "created": {
+      "@id": "venice:created",
+      "@type": "xsd:decimal"
+    },
+    "discount_to_user": {
+      "@id": "venice:discount_to_user",
+      "@type": "xsd:decimal"
+    },
+    "model_spec": {
+      "@id": "venice:model_spec"
+    },
+    "owned_by": {
+      "@id": "venice:owned_by",
+      "@type": "xsd:string"
+    },
+    "WebScrapeResponse": "venice:WebScrapeResponse",
+    "content": {
+      "@id": "venice:content",
+      "@type": "xsd:string"
+    },
+    "WebSearchResponse": "venice:WebSearchResponse",
+    "results": {
+      "@id": "venice:results",
+      "@container": "@list"
+    }
+  },
+  "@type": "schema:Dataset",
+  "schema:name": "Venice.ai API JSON-LD context",
+  "schema:description": "A JSON-LD @context for the objects Venice.ai's own API contract declares: one class per component schema, one property per declared field, typed from the contract. Derived by script (derive-json-ld.py, 2026-10-13) from openapi/venice-ai-openapi.yml.",
+  "dcterms:created": "2026-10-13",
+  "dcterms:source": [
+    "openapi/venice-ai-openapi.yml"
+  ]
+}

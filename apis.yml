@@ -1,23 +1,145 @@
 aid: venice-ai
 name: Venice.ai
-description: 'Venice.ai is a company surfaced via the API Evangelist harvest backlog (source: market-gap:ai-model-routing)
-  and added to the network as a stub for full-pipeline profiling.'
+image: https://venice.ai/social.webp
+description: Venice.ai is a privacy-first, uncensored AI platform and API offering text generation, image generation, audio synthesis, speech-to-speech voice conversion, video generation, music, embeddings
+  and developer tools (web search, document parsing, blockchain RPC) with zero data retention, through an OpenAI-compatible REST API at api.venice.ai, payable by API key or x402 crypto micropayments.
 url: https://raw.githubusercontent.com/api-evangelist/venice-ai/refs/heads/main/apis.yml
 x-type: company
 x-source: harvest:market-gap:ai-model-routing
-x-tier: stub
-x-tier-reason: harvest
+x-tier: profiled
+x-tier-reason: enrichment pass 2026-10-13 (local-v5; was harvest)
 specificationVersion: '0.20'
 created: '2026-10-13'
 modified: '2026-10-13'
 tags:
 - Company
-apis: []
+- Artificial Intelligence
+- LLM
+- Image Generation
+- Video Generation
+- Text To Speech
+- Embeddings
+- Privacy
+- OpenAI Compatible
+- x402
 maintainers:
 - FN: Kin Lane
   email: kin@apievangelist.com
 - FN: APIs.json
   email: info@apis.io
 common:
+- type: AgenticAccess
+  url: agentic-access/venice-ai-agentic-access.yml
+- type: RateLimits
+  url: rate-limits/venice-ai-rate-limits.yml
+- type: Spectral
+  url: rules/venice-ai-rules.yml
+- type: JSONLD
+  url: json-ld/venice-ai-context.jsonld
+- type: Vocabulary
+  url: vocabulary/venice-ai-vocabulary.yml
+- type: AgentSkill
+  url: skills/_index.yml
+- type: DataModel
+  url: data-model/venice-ai-data-model.yml
+- type: Idempotency
+  url: conventions/venice-ai-conventions.yml
+- type: Conventions
+  url: conventions/venice-ai-conventions.yml
+- type: ErrorCatalog
+  url: errors/venice-ai-error-codes.yml
+- type: ErrorCatalog
+  url: errors/venice-ai-problem-types.yml
+- type: Conformance
+  url: conformance/venice-ai-conformance.yml
+- type: LLMsTxt
+  url: llms/venice-ai-llms.txt
+- type: AgentCard
+  url: a2a/venice-ai-a2a.yml
+- type: ToolCrosswalk
+  url: mcp/venice-ai-tool-crosswalk.yml
+- type: MCPServer
+  url: mcp/venice-ai-mcp.yml
+- type: WellKnown
+  url: well-known/venice-ai-well-known.yml
+- type: Hosts
+  url: hosts/venice-ai-hosts.yml
+- type: Vendors
+  url: vendors/venice-ai-vendors.yml
+- type: SDKs
+  url: packages/venice-ai-packages.yml
+- type: Packages
+  url: packages/venice-ai-packages.yml
+- type: Newsroom
+  url: https://venice.ai/media
+- type: DeveloperPortal
+  url: https://api.venice.ai`
+- type: Authentication
+  url: authentication/venice-ai-authentication.yml
+- type: DomainSecurity
+  url: security/venice-ai-domain-security.yml
 - type: Website
   url: https://venice.ai
+- type: APIReference
+  url: https://docs.venice.ai/api-reference/api-spec
+- type: Blog
+  url: https://venice.ai/blog
+- type: ChangeLog
+  url: https://venice.ai/changelog
+- type: Documentation
+  url: https://docs.venice.ai/overview/about-venice
+- type: GettingStarted
+  url: https://docs.venice.ai/getting-started/quick-start
+- type: GitHubOrganization
+  url: https://github.com/veniceai
+- type: Login
+  url: https://venice.ai/sign-in
+- type: SignUp
+  url: https://venice.ai/sign-up
+- type: Pricing
+  url: https://venice.ai/pricing
+- type: PrivacyPolicy
+  url: https://venice.ai/privacy
+- type: TermsOfService
+  url: https://venice.ai/legal/tos
+- type: Postman
+  url: https://docs.venice.ai/guides/getting-started/postman
+- type: Deprecation
+  url: https://docs.venice.ai/overview/deprecations
+- type: RateLimits
+  url: https://docs.venice.ai/api-reference/rate-limiting
+apis:
+- aid: venice-ai:venice-ai-api
+  name: Venice.ai API
+  description: OpenAI-compatible REST API for chat, responses, images, audio, video, music, embeddings, characters, web augmentation, crypto RPC, billing and API key management.
+  humanURL: https://docs.venice.ai/api-reference/api-spec
+  baseURL: https://api.venice.ai/api/v1
+  tags:
+  - AI
+  - LLM
+  - OpenAI Compatible
+  properties:
+  - type: OpenAPI
+    url: openapi/venice-ai-openapi.yml
+  - type: OpenAPI
+    name: OpenAPI (provider-hosted)
+    url: https://api.venice.ai/api/v1/swagger.yaml
+  - type: Documentation
+    url: https://docs.venice.ai/overview/about-venice
+  - type: JSONSchema
+    url: json-schema/venice-ai-model-response-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-chat-completion-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-responses-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-queue-video-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-generate-image-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-multi-edit-image-request-schema.json
+x-enrichment:
+  date: '2026-10-13'
+  status: enriched
+  artifacts_added: 9
+  pass: local-v5

@@ -1,0 +1,82 @@
+name: Venice.ai Rate Limits
+generated: '2026-10-13'
+method: searched
+source: https://docs.venice.ai/api-reference/rate-limiting
+note: Partner-tier columns also published on the page; /api_keys/rate_limits is the canonical per-key source.
+status_code: 429
+headers:
+- x-ratelimit-limit-requests
+- x-ratelimit-remaining-requests
+- x-ratelimit-reset-requests
+- x-ratelimit-limit-tokens
+- x-ratelimit-remaining-tokens
+- x-ratelimit-reset-tokens
+limits:
+- name: Text/embedding size XS requests
+  window: 1 minute
+  max: 500
+  scope: per API key
+  limit_text: '500'
+  unit: requests
+- name: Text/embedding size XS tokens
+  window: 1 minute
+  max: 5000000
+  scope: per API key
+  limit_text: 5,000,000
+  unit: tokens
+- name: Text/embedding size S requests
+  window: 1 minute
+  max: 150
+  scope: per API key
+  limit_text: '150'
+  unit: requests
+- name: Text/embedding size S tokens
+  window: 1 minute
+  max: 3000000
+  scope: per API key
+  limit_text: 3,000,000
+  unit: tokens
+- name: Text/embedding size M requests
+  window: 1 minute
+  max: 100
+  scope: per API key
+  limit_text: '100'
+  unit: requests
+- name: Text/embedding size M tokens
+  window: 1 minute
+  max: 2000000
+  scope: per API key
+  limit_text: 2,000,000
+  unit: tokens
+- name: Text/embedding size L requests
+  window: 1 minute
+  max: 100
+  scope: per API key
+  limit_text: '100'
+  unit: requests
+- name: Text/embedding size L tokens
+  window: 1 minute
+  max: 2000000
+  scope: per API key
+  limit_text: 2,000,000
+  unit: tokens
+- name: Image, upscale, inpaint requests
+  window: 1 minute
+  max: 20
+  scope: per API key
+  limit_text: '20'
+- name: Speech and transcription requests
+  window: 1 minute
+  max: 60
+  scope: per API key
+  limit_text: '60'
+- name: Failed requests budget
+  window: 30 seconds
+  max: 50
+  scope: all endpoints
+  limit_text: 50 per 30s
+- name: Unsupported feature requests budget
+  window: 30 seconds
+  max: 200
+  scope: /chat/completions, /responses
+  limit_text: 200 per 30s

@@ -1,0 +1,19 @@
+generated: '2026-10-13'
+method: generated
+generator: finish-artifacts.py (index from skill frontmatter)
+source: skills/*.md frontmatter; every operationId checked against openapi/
+skills:
+- file: skills/venice-ai-chat-completion.md
+  name: venice-ai-chat-completion
+  api: Venice.ai API
+  operations:
+  - listModels
+  - createChatCompletion
+- file: skills/venice-ai-generate-video.md
+  name: venice-ai-generate-video
+  api: Venice.ai API
+  operations:
+  - quoteVideo
+  - queueVideo
+  - retrieveVideo
+  - completeVideo

@@ -1,0 +1,77 @@
+name: Venice MCP Server
+generated: '2026-10-13'
+method: searched
+source: https://docs.venice.ai/guides/integrations/venice-mcp
+status: official
+deployment:
+  mode: local-stdio
+  install: npx -y @veniceai/mcp-server@0.2.0
+  package: https://www.npmjs.com/package/@veniceai/mcp-server
+  auth: api-key
+  verified: searched
+repository: https://github.com/veniceai/venice-mcp-server
+tool_count_documented: 31
+note: 'Docs state 31 tools; the docs tool table yielded the names below. The server also offers an HTTP mode the user self-hosts (/mcp, VENICE_MCP_AUTH_TOKEN); Venice does not host it. docs.venice.ai/mcp
+  is a separate Mintlify docs-search MCP (tools/list 200: search_venice_api_docs, query_docs_filesystem_venice_api_docs, submit_feedback).'
+docs_mcp:
+  endpoint: https://docs.venice.ai/mcp
+  tools:
+  - search_venice_api_docs
+  - query_docs_filesystem_venice_api_docs
+  - submit_feedback
+  verified: probed
+tools:
+- name: venice_chat
+  description: OpenAI-compatible chat completion against Venice's full LLM catalog.
+- name: venice_responses
+  description: OpenAI-compatible Responses API with single- or multi-turn tool support.
+- name: venice_embeddings
+  description: Compute embeddings for text input.
+- name: venice_chat_with_character
+  description: Chat with a Venice character by slug.
+- name: venice_image_generate
+  description: Generate an image (Flux 2, Lustify SDXL, Anime/WAI, Qwen Image, GPT Image, Nano Banana Pro, and more).
+- name: venice_image_edit
+  description: Edit an image with a prompt.
+- name: venice_image_multi_edit
+  description: Edit multiple images together with one prompt.
+- name: venice_image_upscale
+  description: Upscale an image up to 4×.
+- name: venice_image_remove_bg
+  description: Remove an image background.
+- name: venice_image_styles
+  description: List image style presets.
+- name: venice_video_generate
+  description: Queue a video generation (Sora 2, Veo 3.1, Kling, Wan, LTX 2, Seedance, Runway Gen-4, and more).
+- name: venice_video_status
+  description: Check status of a queued video job.
+- name: venice_video_complete
+  description: Mark a completed video as downloaded; deletes server-side media.
+- name: venice_video_quote
+  description: Get a price quote before queuing.
+- name: venice_tts
+  description: Text-to-speech with cloned voices and emotion tags.
+- name: venice_asr
+  description: Transcribe audio from a URL.
+- name: venice_voice_clone
+  description: List built-in voices or clone a voice from a sample.
+- name: venice_audio_quote
+  description: Get a price quote for music generation.
+- name: venice_music_generate
+  description: Queue music generation (`ace-step-15`, `elevenlabs-music`, `minimax-music-v2/v25/v26`, `stable-audio-25`, `mmaudio-v2`, `elevenlabs-sound-effects-v2`).
+- name: venice_music_status
+  description: Check status of a queued music job.
+- name: venice_music_complete
+  description: Mark a completed music job as downloaded.
+- name: venice_web_search
+  description: Search the web (Firecrawl-backed).
+- name: venice_web_scrape
+  description: Scrape one URL into markdown.
+- name: venice_text_parser
+  description: Extract text from PDF/DOCX/EPUB/PPTX/XLSX.
+- name: venice_list_models
+  description: List the live model catalog with prices.
+- name: venice_list_characters
+  description: List public Venice characters.
+- name: venice_crypto_rpc
+  description: Proxy JSON-RPC calls to Base, Ethereum, Polygon, Arbitrum, or Optimism.

@@ -1,0 +1,12 @@
+generated: '2026-10-13'
+method: derived
+generator: derive-conformance.py
+source: openapi/ (1 document(s), 36 mutating operations)
+idempotency:
+  coverage: partial
+  header: Idempotency-Key
+  mechanism: request header / body token declared in the OpenAPI
+  evidence: Idempotency-Key on 1 of 36 mutating operations
+  verified: derived
+  scope:
+  - cryptoRpcProxy

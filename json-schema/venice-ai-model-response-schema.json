@@ -1,0 +1,1492 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://raw.githubusercontent.com/api-evangelist/venice-ai/main/json-schema/venice-ai-model-response-schema.json",
+  "title": "ModelResponse",
+  "description": "Response schema for model information",
+  "x-generated": "2026-10-13",
+  "x-method": "derived",
+  "x-generator": "derive-json-schema.py",
+  "x-source": "openapi/venice-ai-openapi.yml#/components/schemas/ModelResponse",
+  "type": "object",
+  "properties": {
+    "context_length": {
+      "type": "number",
+      "description": "The context length (maximum input tokens) supported by the model. Only present for text models. This is a standard OpenAI-compatible field that mirrors model_spec.availableContextTokens for client compatibility."
+    },
+    "created": {
+      "type": "number",
+      "description": "Release date on Venice API"
+    },
+    "discount_to_user": {
+      "type": "number",
+      "minimum": 0,
+      "exclusiveMinimum": true,
+      "maximum": 1,
+      "exclusiveMaximum": true,
+      "description": "Fractional discount carried by a reseller agreement covering this model, e.g. 0.2 for 20% off, following the OpenRouter convention of publishing a base price alongside a separate discount fraction: user price = base price × (1 - discount_to_user). Returned only to the reselling partner whose agreement it belongs to, and omitted for every other caller and for models no agreement covers, so an integration should treat an absent field as no discount. Always greater than 0 and less than 1. Prices in model_spec.pricing are what Venice bills and already reflect any promotional discount active for the caller, so apply discount_to_user to those published prices rather than to a separate list rate. Callers buying from Venice directly rather than through a reseller should ignore this field."
+    },
+    "id": {
+      "type": "string",
+      "description": "Model ID"
+    },
+    "model_spec": {
+      "type": "object",
+      "properties": {
+        "availableContextTokens": {
+          "type": "number",
+          "description": "The context length supported by the model. Only applicable for text models."
+        },
+        "maxCompletionTokens": {
+          "type": "number",
+          "description": "The maximum number of completion tokens the model can generate. Use this to know the upper bound for the max_completion_tokens request parameter. Only applicable for text models."
+        },
+        "beta": {
+          "type": "boolean",
+          "description": "Is this model restricted to beta users only? If true, only users with beta access can use this model"
+        },
+        "betaModel": {
+          "type": "boolean",
+          "description": "Is this model in beta status?"
+        },
+        "privacy": {
+          "type": "string",
+          "enum": [
+            "private",
+            "anonymized"
+          ],
+          "description": "The privacy mode of the model. Private models have zero data retention. Anonymized models Venice can not guarantee privacy on, but requests are not affiliated with a user"
+        },
+        "regionRestrictions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Country codes where this model is intended to be available. Only present for models with region restrictions metadata."
+        },
+        "deprecation": {
+          "type": "object",
+          "properties": {
+            "autoRemap": {
+              "type": "boolean",
+              "description": "When true, Venice may automatically remap API requests for this model ID to replacementModelId instead of returning an error."
+            },
+            "date": {
+              "type": "string",
+              "description": "Legacy ISO 8601 instant aligned with the deprecation sunset used in response headers (`x-venice-model-deprecation-date`). Prefer startsAt / removesAt for new integrations."
+            },
+            "removesAt": {
+              "type": "string",
+              "description": "ISO 8601 instant when this model ID is omitted from public GET /models listings (same value as `date` today). Consumers should treat the current wall-clock time as past this instant when deciding whether the model remains listed."
+            },
+            "replacementModelId": {
+              "type": "string",
+              "description": "Suggested public API model ID to migrate to, when one exists."
+            },
+            "startsAt": {
+              "type": "string",
+              "description": "ISO 8601 instant when deprecation warnings and documentation should be considered active for this model."
+            }
+          },
+          "required": [
+            "autoRemap",
+            "date",
+            "removesAt"
+          ],
+          "description": "Deprecation information for the model. Only present for models scheduled to be retired"
+        },
+        "capabilities": {
+          "type": "object",
+          "properties": {
+            "optimizedForCode": {
+              "type": "boolean",
+              "description": "Is the LLM optimized for coding?"
+            },
+            "quantization": {
+              "type": "string",
+              "enum": [
+                "fp4",
+                "fp8",
+                "fp16",
+                "bf16",
+                "int8",
+                "int4",
+                "not-available"
+              ],
+              "description": "The quantization type of the running model."
+            },
+            "supportsFunctionCalling": {
+              "type": "boolean",
+              "description": "Does the LLM model support function calling?"
+            },
+            "supportsAudioInput": {
+              "type": "boolean",
+              "description": "Does the LLM support audio input?"
+            },
+            "supportsReasoning": {
+              "type": "boolean",
+              "description": "Does the model support reasoning with <thinking> blocks of output."
+            },
+            "supportsReasoningEffort": {
+              "type": "boolean",
+              "description": "Does the model support the reasoning_effort parameter to control reasoning depth."
+            },
+            "reasoningEffortOptions": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "none",
+                  "minimal",
+                  "low",
+                  "medium",
+                  "high",
+                  "xhigh",
+                  "max"
+                ]
+              },
+              "description": "Supported reasoning_effort values for this model. Only present when supportsReasoningEffort is true. The \"none\" option means reasoning can be disabled."
+            },
+            "defaultReasoningEffort": {
+              "type": "string",
+              "enum": [
+                "none",
+                "minimal",
+                "low",
+                "medium",
+                "high",
+                "xhigh",
+                "max"
+              ],
+              "description": "Default reasoning_effort value used when the request does not specify one. Only present when supportsReasoningEffort is true."
+            },
+            "supportsResponseSchema": {
+              "type": "boolean",
+              "description": "Does the LLM model support response schema? Only models that support function calling can support response_schema."
+            },
+            "supportsMultipleImages": {
+              "type": "boolean",
+              "description": "Does the LLM support multiple images in a single request? Only applicable when supportsVision is true."
+            },
+            "maxImages": {
+              "type": "number",
+              "description": "Maximum number of images supported per request. Only present when supportsMultipleImages is true."
+            },
+            "maxVideos": {
+              "type": "number",
+              "description": "Maximum number of video attachments supported per chat request. Only present when supportsVideoInput is true."
+            },
+            "supportsVision": {
+              "type": "boolean",
+              "description": "Does the LLM support vision?"
+            },
+            "supportsVideoInput": {
+              "type": "boolean",
+              "description": "Does the LLM support video input?"
+            },
+            "supportsWebSearch": {
+              "type": "boolean",
+              "description": "Does the LLM model support web search?"
+            },
+            "supportsLogProbs": {
+              "type": "boolean",
+              "description": "Does the LLM model support logprobs parameter?"
+            },
+            "supportsTeeAttestation": {
+              "type": "boolean",
+              "description": "Does the model run inside a Trusted Execution Environment (TEE) with hardware attestation? When true, use GET /tee/attestation and GET /tee/signature to cryptographically verify that inference occurred inside a genuine TEE."
+            },
+            "supportsE2EE": {
+              "type": "boolean",
+              "description": "Does the model support End-to-End Encryption (E2EE)? When true, clients can encrypt prompts using the TEE public key from attestation, and responses are returned encrypted. Requires supportsTeeAttestation to also be true."
+            },
+            "supportsXSearch": {
+              "type": "boolean",
+              "description": "Does the model support xAI's native X Search (web + X/Twitter search)? When true, you can use venice_parameters.enable_x_search to activate real-time search powered by xAI."
+            }
+          },
+          "required": [
+            "optimizedForCode",
+            "quantization",
+            "supportsFunctionCalling",
+            "supportsAudioInput",
+            "supportsReasoning",
+            "supportsReasoningEffort",
+            "supportsResponseSchema",
+            "supportsMultipleImages",
+            "supportsVision",
+            "supportsVideoInput",
+            "supportsWebSearch",
+            "supportsLogProbs",
+            "supportsTeeAttestation",
+            "supportsE2EE",
+            "supportsXSearch"
+          ],
+          "additionalProperties": false,
+          "description": "Text model specific capabilities."
+        },
+        "constraints": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "aspectRatios": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Supported aspect ratio options for this model. Only present for models that support aspect ratio selection."
+                },
+                "defaultAspectRatio": {
+                  "type": "string",
+                  "description": "The default aspect ratio for this model. Only present for models that support aspect ratio selection."
+                },
+                "defaultResolution": {
+                  "type": "string",
+                  "description": "The default resolution for this model. Only present for models that support resolution selection."
+                },
+                "resolutions": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Supported resolution options for this model. Only present for models that support resolution selection."
+                },
+                "defaultQuality": {
+                  "type": "string",
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high"
+                  ],
+                  "description": "The default quality for this model. Only present for models that accept the `quality` request parameter (currently GPT Image 2)."
+                },
+                "qualities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high"
+                    ]
+                  },
+                  "description": "Supported quality options for this model. Only present for models that accept the `quality` request parameter (currently GPT Image 2)."
+                },
+                "promptCharacterLimit": {
+                  "type": "number",
+                  "description": "The maximum supported prompt length."
+                },
+                "steps": {
+                  "type": "object",
+                  "properties": {
+                    "default": {
+                      "type": "number",
+                      "description": "The default steps value for the model"
+                    },
+                    "max": {
+                      "type": "number",
+                      "description": "The maximum supported steps value for the model"
+                    }
+                  },
+                  "required": [
+                    "default",
+                    "max"
+                  ]
+                },
+                "widthHeightDivisor": {
+                  "type": "number",
+                  "description": "The requested width and height of the image generation must be divisible by this value."
+                },
+                "maxStyleReferences": {
+                  "type": "number",
+                  "description": "Maximum number of style_references accepted by POST /image/generate. Only present for models that support style references."
+                },
+                "supportsStyleReferenceStrength": {
+                  "type": "boolean",
+                  "description": "Whether per-reference `strength` is honored. When false, style_references strength is ignored. Only present for models that support style references."
+                }
+              },
+              "required": [
+                "promptCharacterLimit",
+                "steps",
+                "widthHeightDivisor"
+              ],
+              "description": "Constraints that apply to image models.",
+              "title": "Image Model Constraints"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "temperature": {
+                  "type": "object",
+                  "properties": {
+                    "default": {
+                      "type": "number",
+                      "description": "The default temperature value for the model"
+                    }
+                  },
+                  "required": [
+                    "default"
+                  ]
+                },
+                "top_p": {
+                  "type": "object",
+                  "properties": {
+                    "default": {
+                      "type": "number",
+                      "description": "The default top_p value for the model"
+                    }
+                  },
+                  "required": [
+                    "default"
+                  ]
+                },
+                "frequency_penalty": {
+                  "type": "object",
+                  "properties": {
+                    "default": {
+                      "type": "number",
+                      "description": "The default frequency_penalty value for the model"
+                    }
+                  },
+                  "required": [
+                    "default"
+                  ]
+                },
+                "presence_penalty": {
+                  "type": "object",
+                  "properties": {
+                    "default": {
+                      "type": "number",
+                      "description": "The default presence_penalty value for the model"
+                    }
+                  },
+                  "required": [
+                    "default"
+                  ]
+                },
+                "repetition_penalty": {
+                  "type": "object",
+                  "properties": {
+                    "default": {
+                      "type": "number",
+                      "description": "The default repetition_penalty value for the model"
+                    }
+                  },
+                  "required": [
+                    "default"
+                  ]
+                }
+              },
+              "required": [
+                "temperature",
+                "top_p"
+              ],
+              "description": "Constraints that apply to text models.",
+              "title": "Text Model Constraints"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "aspect_ratios": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "The aspect ratios supported by the model. Empty array means the model does not support a defined aspect ratio."
+                },
+                "resolutions": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "The resolutions supported by the model. Empty array means the model does not support a defined resolution."
+                },
+                "durations": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "The durations supported by the model. Empty array means the model does not support a defined duration."
+                },
+                "model_type": {
+                  "type": "string",
+                  "enum": [
+                    "image-to-video",
+                    "text-to-video",
+                    "video"
+                  ],
+                  "description": "The type of video model."
+                },
+                "audio": {
+                  "type": "boolean",
+                  "description": "Does the model support audio generation?"
+                },
+                "audio_configurable": {
+                  "type": "boolean",
+                  "description": "Can audio be enabled or disabled for the video generation?"
+                },
+                "prompt_character_limit": {
+                  "type": "number",
+                  "description": "The maximum supported prompt length for this video model. If not specified, the default is 2500 characters."
+                },
+                "topaz": {
+                  "type": "object",
+                  "properties": {
+                    "models": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "display": {
+                            "type": "string"
+                          },
+                          "value": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "display",
+                          "value"
+                        ]
+                      },
+                      "description": "Available values for the `enhancement_model` request parameter."
+                    },
+                    "sliders": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "default": {
+                            "type": "number"
+                          },
+                          "max": {
+                            "type": "number"
+                          },
+                          "min": {
+                            "type": "number"
+                          },
+                          "param": {
+                            "type": "string"
+                          },
+                          "only_for_models": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "When present, the parameter only applies to these enhancement models."
+                          }
+                        },
+                        "required": [
+                          "default",
+                          "max",
+                          "min",
+                          "param"
+                        ]
+                      },
+                      "description": "Numeric enhancement parameters with their valid ranges and defaults."
+                    },
+                    "no_upscale_models": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      },
+                      "description": "Enhancement models that must run at source resolution (upscale_factor > 1 is rejected with them)."
+                    },
+                    "selects": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "default": {
+                            "type": "string"
+                          },
+                          "options": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            }
+                          },
+                          "param": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "default",
+                          "options",
+                          "param"
+                        ]
+                      },
+                      "description": "Enum-style enhancement parameters (e.g. `target_fps`, `output_format`, `slowdown_factor`)."
+                    },
+                    "h264_output": {
+                      "type": "boolean",
+                      "description": "Whether the model accepts the `h264_output` parameter."
+                    },
+                    "prompt": {
+                      "type": "boolean",
+                      "description": "Whether the model accepts an optional guidance `prompt` (e.g. Topaz Astra)."
+                    }
+                  },
+                  "description": "Topaz enhancement controls supported by this model. Absent for regular generation models."
+                }
+              },
+              "required": [
+                "aspect_ratios",
+                "resolutions",
+                "durations",
+                "model_type",
+                "audio",
+                "audio_configurable"
+              ],
+              "description": "Constraints that apply to video models.",
+              "title": "Video Model Constraints"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "aspectRatios": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "The aspect ratios supported by this model. Omit the parameter to use the model's default setting."
+                },
+                "promptCharacterLimit": {
+                  "type": "number",
+                  "description": "The maximum supported prompt length."
+                },
+                "combineImages": {
+                  "type": "boolean",
+                  "description": "Whether this model supports combining multiple input images."
+                },
+                "maxInputImages": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "exclusiveMinimum": true,
+                  "description": "Maximum number of input images accepted for combine/multi-edit. Absent means the default of 3 (or 1 when combineImages is false)."
+                },
+                "singleImageAspectRatio": {
+                  "type": "boolean",
+                  "description": "If false, output dimensions match the input on single-image edits and `aspect_ratio` is ignored. Multi-image edits are unaffected. Defaults to true."
+                },
+                "defaultResolution": {
+                  "type": "string",
+                  "description": "The default resolution for this inpaint model. Only present for models that support resolution selection (e.g. GPT Image 2 Edit)."
+                },
+                "resolutions": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "description": "Supported resolution options for this inpaint model. Only present for models that support resolution selection."
+                },
+                "defaultQuality": {
+                  "type": "string",
+                  "enum": [
+                    "low",
+                    "medium",
+                    "high"
+                  ],
+                  "description": "The default quality for this inpaint model. Only present for models that accept the `quality` request parameter (currently GPT Image 2 Edit)."
+                },
+                "qualities": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high"
+                    ]
+                  },
+                  "description": "Supported quality options for this inpaint model. Only present for models that accept the `quality` request parameter (currently GPT Image 2 Edit)."
+                }
+              },
+              "required": [
+                "aspectRatios",
+                "promptCharacterLimit",
+                "combineImages"
+              ],
+              "description": "Constraints that apply to inpaint/edit models.",
+              "title": "Inpaint Model Constraints"
+            }
+          ],
+          "description": "Constraints that apply to this model."
+        },
+        "supportsStyleReferences": {
+          "type": "boolean",
+          "description": "Whether this image model accepts `style_references` on POST /image/generate. Only present for image models."
+        },
+        "description": {
+          "type": "string",
+          "description": "A human-readable description of the model and its capabilities."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the model."
+        },
+        "modelSource": {
+          "type": "string",
+          "description": "The source of the model, such as a URL to the model repository."
+        },
+        "offline": {
+          "type": "boolean",
+          "default": false,
+          "description": "Is this model presently offline?"
+        },
+        "pricing": {
+          "anyOf": [
+            {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": "object",
+                  "properties": {
+                    "usd": {
+                      "type": "number",
+                      "description": "USD cost per million input tokens"
+                    },
+                    "diem": {
+                      "type": "number",
+                      "description": "Diem cost per million input tokens"
+                    }
+                  },
+                  "required": [
+                    "usd",
+                    "diem"
+                  ]
+                },
+                "cache_input": {
+                  "type": "object",
+                  "properties": {
+                    "usd": {
+                      "type": "number",
+                      "description": "USD cost per million cached input tokens (discounted rate for cache reads)"
+                    },
+                    "diem": {
+                      "type": "number",
+                      "description": "Diem cost per million cached input tokens (discounted rate for cache reads)"
+                    }
+                  },
+                  "required": [
+                    "usd",
+                    "diem"
+                  ],
+                  "description": "Optional pricing for cached input tokens (cache reads). Only present for models that support context caching."
+                },
+                "cache_write": {
+                  "type": "object",
+                  "properties": {
+                    "usd": {
+                      "type": "number",
+                      "description": "USD cost per million cache creation tokens (cache writes). For some providers this may be higher than input price."
+                    },
+                    "diem": {
+                      "type": "number",
+                      "description": "Diem cost per million cache creation tokens (cache writes). For some providers this may be higher than input price."
+                    }
+                  },
+                  "required": [
+                    "usd",
+                    "diem"
+                  ],
+                  "description": "Optional pricing for cache creation tokens (cache writes). Only present for models where provider charges for cache writes (e.g., Anthropic charges 1.25x input price)."
+                },
+                "output": {
+                  "type": "object",
+                  "properties": {
+                    "usd": {
+                      "type": "number",
+                      "description": "USD cost per million output tokens"
+                    },
+                    "diem": {
+                      "type": "number",
+                      "description": "Diem cost per million output tokens"
+                    }
+                  },
+                  "required": [
+                    "usd",
+                    "diem"
+                  ]
+                },
+                "extended": {
+                  "type": "object",
+                  "properties": {
+                    "context_token_threshold": {
+                      "type": "number",
+                      "description": "Input token count above which extended pricing applies"
+                    },
+                    "input": {
+                      "type": "object",
+                      "properties": {
+                        "usd": {
+                          "type": "number",
+                          "description": "USD cost per million input tokens (extended tier)"
+                        },
+                        "diem": {
+                          "type": "number",
+                          "description": "Diem cost per million input tokens (extended tier)"
+                        }
+                      },
+                      "required": [
+                        "usd",
+                        "diem"
+                      ]
+                    },
+                    "output": {
+                      "type": "object",
+                      "properties": {
+                        "usd": {
+                          "type": "number",
+                          "description": "USD cost per million output tokens (extended tier)"
+                        },
+                        "diem": {
+                          "type": "number",
+                          "description": "Diem cost per million output tokens (extended tier)"
+                        }
+                      },
+                      "required": [
+                        "usd",
+                        "diem"
+                      ]
+                    },
+                    "cache_input": {
+                      "type": "object",
+                      "properties": {
+                        "usd": {
+                          "type": "number",
+                          "description": "USD cost per million cached input tokens (extended tier)"
+                        },
+                        "diem": {
+                          "type": "number",
+                          "description": "Diem cost per million cached input tokens (extended tier)"
+                        }
+                      },
+                      "required": [
+                        "usd",
+                        "diem"
+                      ]
+                    },
+                    "cache_write": {
+                      "type": "object",
+                      "properties": {
+                        "usd": {
+                          "type": "number",
+                          "description": "USD cost per million cache write tokens (extended tier)"
+                        },
+                        "diem": {
+                          "type": "number",
+                          "description": "Diem cost per million cache write tokens (extended tier)"
+                        }
+                      },
+                      "required": [
+                        "usd",
+                        "diem"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "context_token_threshold",
+                    "input",
+                    "output"
+                  ],
+                  "description": "Extended pricing for long-context requests exceeding the threshold. When input tokens exceed context_token_threshold, extended rates apply to the entire request."
+                }
+              },
+              "required": [
+                "input",
+                "output"
+              ],
+              "description": "Token-based pricing for chat models. Models supporting context caching will include cache_input (cache read) pricing. Some providers like Anthropic also charge for cache_write (cache creation) at a premium rate.",
+              "title": "LLM Model Pricing"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "generation": {
+                  "type": "object",
+                  "properties": {
+                    "usd": {
+                      "type": "number",
+                      "description": "USD cost per image generation (base price)"
+                    },
+                    "diem": {
+                      "type": "number",
+                      "description": "Diem cost per image generation (base price)"
+                    }
+                  },
+                  "required": [
+                    "usd",
+                    "diem"
+                  ],
+                  "description": "Base pricing for image generation. Only present for models without resolution-specific pricing."
+                },
+                "resolutions": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "usd": {
+                        "type": "number",
+                        "description": "USD cost for this resolution"
+                      },
+                      "diem": {
+                        "type": "number",
+                        "description": "Diem cost for this resolution"
+                      }
+                    },
+                    "required": [
+                      "usd",
+                      "diem"
+                    ]
+                  },
+                  "description": "Resolution-specific pricing. Keys are resolution tiers (e.g. \"1K\", \"2K\", \"4K\"). Only present for models that support resolution selection. When present, replaces `generation`."
+                },
+                "quality": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "low": {
+                        "type": "object",
+                        "properties": {
+                          "usd": {
+                            "type": "number",
+                            "description": "USD cost for this resolution"
+                          },
+                          "diem": {
+                            "type": "number",
+                            "description": "Diem cost for this resolution"
+                          }
+                        },
+                        "required": [
+                          "usd",
+                          "diem"
+                        ]
+                      },
+                      "medium": {
+                        "type": "object",
+                        "properties": {
+                          "usd": {
+                            "type": "number",
+                            "description": "USD cost for this resolution"
+                          },
+                          "diem": {
+                            "type": "number",
+                            "description": "Diem cost for this resolution"
+                          }
+                        },
+                        "required": [
+                          "usd",
+                          "diem"
+                        ]
+                      },
+                      "high": {
+                        "type": "object",
+                        "properties": {
+                          "usd": {
+                            "type": "number",
+                            "description": "USD cost for this resolution"
+                          },
+                          "diem": {
+                            "type": "number",
+                            "description": "Diem cost for this resolution"
+                          }
+                        },
+                        "required": [
+                          "usd",
+                          "diem"
+                        ]
+                      }
+                    }
+                  },
+                  "description": "Per-(resolution, quality) pricing. Only present for models that accept the `quality` request parameter (currently GPT Image 2 / GPT Image 2 Edit)."
+                },
+                "upscale": {
+                  "type": "object",
+                  "properties": {
+                    "2x": {
+                      "type": "object",
+                      "properties": {
+                        "usd": {
+                          "type": "number",
+                          "description": "USD cost for 2x upscale"
+                        },
+                        "diem": {
+                          "type": "number",
+                          "description": "Diem cost for 2x upscale"
+                        }
+                      },
+                      "required": [
+                        "usd",
+                        "diem"
+                      ]
+                    },
+                    "4x": {
+                      "type": "object",
+                      "properties": {
+                        "usd": {
+                          "type": "number",
+                          "description": "USD cost for 4x upscale"
+                        },
+                        "diem": {
+                          "type": "number",
+                          "description": "Diem cost for 4x upscale"
+                        }
+                      },
+                      "required": [
+                        "usd",
+                        "diem"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "2x",
+                    "4x"
+                  ]
+                }
+              },
+              "required": [
+                "upscale"
+              ],
+              "description": "Pricing for image generation and upscaling",
+              "title": "Image Model Pricing"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "input": {
+                  "type": "object",
+                  "properties": {
+                    "usd": {
+                      "type": "number",
+                      "description": "USD cost per million input characters"
+                    },
+                    "diem": {
+                      "type": "number",
+                      "description": "Diem cost per million input characters"
+                    }
+                  },
+                  "required": [
+                    "usd",
+                    "diem"
+                  ]
+                }
+              },
+              "required": [
+                "input"
+              ],
+              "description": "Pricing for TTS models",
+              "title": "TTS Model Pricing"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "per_audio_second": {
+                  "type": "object",
+                  "properties": {
+                    "usd": {
+                      "type": "number",
+                      "description": "USD cost per audio second"
+                    },
+                    "diem": {
+                      "type": "number",
+                      "description": "Diem cost per audio second"
+                    }
+                  },
+                  "required": [
+                    "usd",
+                    "diem"
+                  ]
+                }
+              },
+              "required": [
+                "per_audio_second"
+              ],
+              "description": "Pricing for ASR (speech-to-text) models",
+              "title": "ASR Model Pricing"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "inpaint": {
+                  "type": "object",
+                  "properties": {
+                    "usd": {
+                      "type": "number",
+                      "description": "USD cost per image edit/inpaint operation"
+                    },
+                    "diem": {
+                      "type": "number",
+                      "description": "Diem cost per image edit/inpaint operation"
+                    }
+                  },
+                  "required": [
+                    "usd",
+                    "diem"
+                  ]
+                },
+                "resolutions": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "usd": {
+                        "type": "number",
+                        "description": "USD cost for this resolution"
+                      },
+                      "diem": {
+                        "type": "number",
+                        "description": "Diem cost for this resolution"
+                      }
+                    },
+                    "required": [
+                      "usd",
+                      "diem"
+                    ]
+                  },
+                  "description": "Resolution-specific pricing. Keys are resolution tiers (e.g. \"1K\", \"2K\", \"4K\"). Only present for inpaint models that support resolution selection."
+                },
+                "inputImages": {
+                  "type": "object",
+                  "properties": {
+                    "included": {
+                      "type": "number",
+                      "description": "Number of input images included in the base price. Each additional input image adds the \"additional\" cost."
+                    },
+                    "additional": {
+                      "type": "object",
+                      "properties": {
+                        "usd": {
+                          "type": "number",
+                          "description": "USD cost per additional input image beyond the included count"
+                        },
+                        "diem": {
+                          "type": "number",
+                          "description": "Diem cost per additional input image beyond the included count"
+                        }
+                      },
+                      "required": [
+                        "usd",
+                        "diem"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "included",
+                    "additional"
+                  ],
+                  "description": "Input-image pricing. The base price covers \"included\" input images; each additional input image adds the \"additional\" cost per output image."
+                },
+                "quality": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "low": {
+                        "type": "object",
+                        "properties": {
+                          "usd": {
+                            "type": "number",
+                            "description": "USD cost for this resolution"
+                          },
+                          "diem": {
+                            "type": "number",
+                            "description": "Diem cost for this resolution"
+                          }
+                        },
+                        "required": [
+                          "usd",
+                          "diem"
+                        ]
+                      },
+                      "medium": {
+                        "type": "object",
+                        "properties": {
+                          "usd": {
+                            "type": "number",
+                            "description": "USD cost for this resolution"
+                          },
+                          "diem": {
+                            "type": "number",
+                            "description": "Diem cost for this resolution"
+                          }
+                        },
+                        "required": [
+                          "usd",
+                          "diem"
+                        ]
+                      },
+                      "high": {
+                        "type": "object",
+                        "properties": {
+                          "usd": {
+                            "type": "number",
+                            "description": "USD cost for this resolution"
+                          },
+                          "diem": {
+                            "type": "number",
+                            "description": "Diem cost for this resolution"
+                          }
+                        },
+                        "required": [
+                          "usd",
+                          "diem"
+                        ]
+                      }
+                    }
+                  },
+                  "description": "Per-(resolution, quality) pricing. Only present for models that accept the `quality` request parameter (currently GPT Image 2 / GPT Image 2 Edit)."
+                }
+              },
+              "required": [
+                "inpaint"
+              ],
+              "description": "Pricing for image editing/inpainting models",
+              "title": "Inpaint Model Pricing"
+            },
+            {
+              "type": "object",
+              "properties": {
+                "generation": {
+                  "type": "object",
+                  "properties": {
+                    "usd": {
+                      "type": "number",
+                      "description": "USD cost per music generation"
+                    },
+                    "diem": {
+                      "type": "number",
+                      "description": "Diem cost per music generation"
+                    }
+                  },
+                  "required": [
+                    "usd",
+                    "diem"
+                  ]
+                }
+              },
+              "required": [
+                "generation"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "durations": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                      "usd": {
+                        "type": "number",
+                        "description": "USD cost for this duration tier"
+                      },
+                      "diem": {
+                        "type": "number",
+                        "description": "Diem cost for this duration tier"
+                      },
+                      "min_seconds": {
+                        "type": "number",
+                        "description": "Minimum duration (inclusive) in seconds that falls into this pricing tier"
+                      },
+                      "max_seconds": {
+                        "type": "number",
+                        "description": "Maximum duration (inclusive) in seconds that falls into this pricing tier"
+                      }
+                    },
+                    "required": [
+                      "usd",
+                      "diem",
+                      "min_seconds",
+                      "max_seconds"
+                    ]
+                  }
+                }
+              },
+              "required": [
+                "durations"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "per_second": {
+                  "type": "object",
+                  "properties": {
+                    "usd": {
+                      "type": "number",
+                      "description": "USD cost per second of generated music"
+                    },
+                    "diem": {
+                      "type": "number",
+                      "description": "Diem cost per second of generated music"
+                    }
+                  },
+                  "required": [
+                    "usd",
+                    "diem"
+                  ]
+                }
+              },
+              "required": [
+                "per_second"
+              ]
+            },
+            {
+              "type": "object",
+              "properties": {
+                "per_thousand_characters": {
+                  "type": "object",
+                  "properties": {
+                    "usd": {
+                      "type": "number",
+                      "description": "USD cost per thousand characters"
+                    },
+                    "diem": {
+                      "type": "number",
+                      "description": "Diem cost per thousand characters"
+                    }
+                  },
+                  "required": [
+                    "usd",
+                    "diem"
+                  ]
+                }
+              },
+              "required": [
+                "per_thousand_characters"
+              ]
+            }
+          ],
+          "description": "Pricing details for the model"
+        },
+        "traits": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Traits that apply to this model. You can specify a trait to auto-select a model vs. specifying the model ID in your request to avoid breakage as Venice updates and iterates on its models."
+        },
+        "uncensored": {
+          "type": "boolean",
+          "description": "Present and true when Venice classifies this model as uncensored, meaning it applies minimal content-based filtering. Covers every modality, including the video models listed under the `uncensored` model set. Absent for all other models. Upstream providers may still apply their own filtering."
+        },
+        "embeddingDimensions": {
+          "type": "number",
+          "description": "The native/default number of dimensions in the output embedding vector. Only present for embedding models."
+        },
+        "maxInputTokens": {
+          "type": "number",
+          "description": "Maximum number of input tokens the model accepts per input string. Only present for embedding models."
+        },
+        "supportsCustomDimensions": {
+          "type": "boolean",
+          "description": "Whether the model supports reducing output dimensions via the `dimensions` request parameter. Only present for embedding models that support it."
+        },
+        "maxStateTokens": {
+          "type": "number",
+          "description": "Maximum tokens for `state` plus the single longest question. Only present for decision models."
+        },
+        "maxTotalTokens": {
+          "type": "number",
+          "description": "Maximum tokens for `state` plus all questions combined. Only present for decision models."
+        },
+        "supports_lyrics": {
+          "type": "boolean",
+          "description": "Whether this audio-generation model supports lyrics input."
+        },
+        "lyrics_required": {
+          "type": "boolean",
+          "description": "Whether lyrics input is required for this audio-generation model."
+        },
+        "supports_force_instrumental": {
+          "type": "boolean",
+          "description": "Whether this audio-generation model supports the force_instrumental request parameter."
+        },
+        "supports_loop": {
+          "type": "boolean",
+          "description": "Whether this audio-generation model supports the loop request parameter."
+        },
+        "voices": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "The voices available for this model. Applicable for TTS models and voice-enabled music models. Note: each model has its own set of supported voices."
+        },
+        "voice_cloning": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "zero_shot",
+                "persistent"
+              ],
+              "description": "How the upstream provider implements voice cloning. `zero_shot` re-reads the reference audio on every synthesis call and never derives a persistent voice template (e.g. Chatterbox HD). `persistent` derives a custom voice template upstream that survives across synthesis calls (e.g. MiniMax Speech-02 HD)."
+            },
+            "accepted_formats": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Audio container formats this model accepts as a reference sample on POST /v1/audio/voices. Samples in other containers are rejected with HTTP 400 before any upload."
+            },
+            "min_sample_seconds": {
+              "type": "number",
+              "description": "Recommended minimum length of the reference audio sample, in seconds, for an intelligible clone."
+            },
+            "retention_days": {
+              "type": "number",
+              "description": "Days a `vv_<id>` voice handle remains valid against this model. For `persistent` models the upstream provider auto-deletes the cloned voice after this many days without use; each successful TTS request resets the window. For `zero_shot` models this is the storage TTL on the uploaded reference audio; the handle stops working when it expires and the user must re-upload."
+            }
+          },
+          "required": [
+            "mode",
+            "accepted_formats",
+            "min_sample_seconds",
+            "retention_days"
+          ],
+          "additionalProperties": false,
+          "description": "Voice-cloning capability. Only present for TTS models whose cloning endpoint is available to the caller — pass the model to POST /v1/audio/voices to mint a `vv_<id>` voice handle, then pass that handle back as the `voice` parameter on POST /v1/audio/speech alongside the same `model`.",
+          "title": "TTS Voice Cloning"
+        },
+        "default_voice": {
+          "type": "string",
+          "description": "Default voice for voice-enabled music models."
+        },
+        "supports_custom_voice_id": {
+          "type": "boolean",
+          "description": "Whether this model accepts a caller-supplied provider Voice ID in the `voice` parameter in addition to its curated `voices` (e.g. paste an ElevenLabs Voice ID)."
+        },
+        "supports_language_code": {
+          "type": "boolean",
+          "description": "Whether this music model supports an ISO 639-1 language_code parameter."
+        },
+        "voice_changer": {
+          "type": "boolean",
+          "description": "Whether this model performs speech-to-speech conversion. Present only on voice-changer models, which take a source recording instead of a prompt and are served by the POST /v1/audio/voice-changer/* endpoints rather than POST /v1/audio/queue."
+        },
+        "supports_background_noise_removal": {
+          "type": "boolean",
+          "description": "Whether this voice-changer model accepts the remove_background_noise request parameter."
+        },
+        "supports_seed": {
+          "type": "boolean",
+          "description": "Whether this voice-changer model accepts a seed request parameter for reproducible output."
+        },
+        "accepted_audio_formats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Audio container formats this voice-changer model accepts as a source recording. The verdict comes from the file's binary signature, not its filename or declared content type, so mislabelled uploads in an accepted container still succeed and correctly-labelled uploads in an unaccepted one are rejected with HTTP 400 before any charge."
+        },
+        "max_source_audio_duration_seconds": {
+          "type": "number",
+          "description": "Longest source recording this voice-changer model accepts, in seconds. Voice Changer is billed off the length of the source recording, measured server-side and rounded up to the next whole minute, so this bounds the cost of a single request. Longer recordings are rejected with HTTP 422 before any charge."
+        },
+        "supports_speed": {
+          "type": "boolean",
+          "description": "Whether this music model supports speed adjustment."
+        },
+        "default_speed": {
+          "type": "number",
+          "description": "Default speed multiplier for this music model."
+        },
+        "min_speed": {
+          "type": "number",
+          "description": "Minimum speed multiplier for this music model."
+        },
+        "max_speed": {
+          "type": "number",
+          "description": "Maximum speed multiplier for this music model."
+        },
+        "duration_options": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "description": "Available duration options in seconds for this music model."
+        },
+        "min_duration": {
+          "type": "number",
+          "description": "Minimum duration in seconds for this music model."
+        },
+        "max_duration": {
+          "type": "number",
+          "description": "Maximum duration in seconds for this music model."
+        },
+        "default_duration": {
+          "type": "number",
+          "description": "Default duration in seconds for this music model."
+        },
+        "supported_formats": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Supported output audio formats for this TTS or music model. An explicit format outside this list is rejected by the corresponding generation endpoint."
+        },
+        "default_format": {
+          "type": "string",
+          "description": "Output audio format used when the request omits a format. Applicable to TTS and music models."
+        },
+        "prompt_character_limit": {
+          "type": "number",
+          "description": "Maximum prompt character limit for this music model."
+        },
+        "min_prompt_length": {
+          "type": "number",
+          "description": "Minimum prompt length for this music model."
+        },
+        "lyrics_character_limit": {
+          "type": "number",
+          "description": "Maximum lyrics character limit for this music model."
+        }
+      },
+      "required": [
+        "privacy"
+      ]
+    },
+    "object": {
+      "type": "string",
+      "enum": [
+        "model"
+      ],
+      "description": "Object type"
+    },
+    "owned_by": {
+      "type": "string",
+      "enum": [
+        "venice.ai"
+      ],
+      "description": "Who runs the model"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "asr",
+        "decision",
+        "embedding",
+        "image",
+        "music",
+        "text",
+        "tts",
+        "upscale",
+        "inpaint",
+        "video"
+      ],
+      "description": "Model type"
+    }
+  },
+  "required": [
+    "id",
+    "model_spec",
+    "object",
+    "owned_by",
+    "type"
+  ]
+}

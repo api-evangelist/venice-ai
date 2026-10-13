@@ -1,0 +1,16 @@
+{
+  "name": "Venice AI",
+  "title": "Venice AI",
+  "kind": "product",
+  "version": "0.2.0",
+  "description": "Private, uncensored inference over MCP: chat, image, video, audio, music, embeddings, and web tools. Pay with an API key or an x402 USDC wallet.",
+  "icon": "https://venice.ai/favicon.png",
+  "websiteUrl": "https://venice.ai",
+  "documentationUrl": "https://docs.venice.ai/guides/integrations/venice-mcp",
+  "transport": "stdio",
+  "package": "@veniceai/mcp-server",
+  "repository": {
+    "url": "https://github.com/veniceai/venice-mcp-server",
+    "source": "github"
+  }
+}

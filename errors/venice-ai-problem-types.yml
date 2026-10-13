@@ -1,0 +1,113 @@
+generated: '2026-10-13'
+method: derived
+generator: derive-problem-types.py
+source:
+- openapi/venice-ai-openapi.yml
+format: custom
+envelope:
+  media_type: application/json
+  schema: StandardError
+coverage:
+  operations: 55
+  statuses_declared: 14
+problems:
+- status: 400
+  title: Bad Request
+  description: Invalid request parameters
+  operations: 39
+  media_types:
+  - application/json
+  schema: DetailedError
+- status: 401
+  title: Unauthorized
+  description: Authentication failed
+  operations: 45
+  media_types:
+  - application/json
+  schema: StandardError
+- status: 402
+  title: Payment Required
+  description: 'Payment or balance required. Response varies by authentication state:'
+  operations: 28
+  media_types:
+  - application/json
+  schema: null
+- status: 403
+  title: Forbidden
+  description: This API key is restricted to configured IP addresses, and this request's source IP is not allowed
+  operations: 48
+  media_types:
+  - application/json
+  schema: ApiKeyIpRestrictedError
+- status: 404
+  title: Not Found
+  description: Media could not be found. Request may may be invalid, expired, or deleted.
+  operations: 5
+  media_types:
+  - application/json
+  schema: StandardError
+- status: 409
+  title: Conflict
+  description: Additional consent is required before this request can be queued for some models
+  operations: 1
+  media_types:
+  - application/json
+  schema: null
+- status: 410
+  title: Gone
+  description: 'This beta endpoint has been deprecated and is no longer available. The error message names POST
+    /api/v1/chat/completions with video_url and '
+  operations: 2
+  media_types:
+  - application/json
+  schema: StandardError
+- status: 413
+  title: Content Too Large
+  description: The request payload is too large. Please reduce the size of your request.
+  operations: 4
+  media_types:
+  - application/json
+  schema: PayloadTooLargeError
+- status: 415
+  title: Unsupported Media Type
+  description: Invalid request content-type
+  operations: 13
+  media_types:
+  - application/json
+  schema: StandardError
+- status: 422
+  title: Unprocessable Content
+  description: Your prompt violates the content policy of Venice.ai or the model provider
+  operations: 7
+  media_types:
+  - application/json
+  schema: ContentViolationError
+- status: 429
+  title: Too Many Requests
+  description: Rate limit exceeded
+  operations: 27
+  media_types:
+  - application/json
+  schema: StandardError
+- status: 500
+  title: Internal Server Error
+  description: Inference processing failed
+  operations: 49
+  media_types:
+  - application/json
+  schema: StandardError
+- status: 503
+  title: Service Unavailable
+  description: The model is at capacity. Please try again later.
+  operations: 18
+  media_types:
+  - application/json
+  schema: StandardError
+- status: 504
+  title: Gateway Timeout
+  description: The request took too long to complete and was timed-out. For long-running inference requests, use
+    the streaming API by setting stream=true i
+  operations: 3
+  media_types:
+  - application/json
+  schema: StandardError

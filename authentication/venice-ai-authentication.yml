@@ -1,0 +1,29 @@
+generated: '2026-10-13'
+method: derived
+source: openapi/venice-ai-openapi.yml
+summary:
+  types:
+  - apiKey
+  - http
+  api_key_in:
+  - header
+schemes:
+- name: BearerAuth
+  type: http
+  scheme: bearer
+  bearerFormat: JWT
+  sources:
+  - openapi/venice-ai-openapi.yml
+- name: siwx
+  type: apiKey
+  in: header
+  parameter: SIGN-IN-WITH-X
+  description: |-
+    Wallet-based authentication using the x402 protocol (Sign-In-With-X). Supports EVM SIWE signatures on Base and Ed25519 signatures on Solana mainnet.
+
+    **Header format:** Base64-encoded JSON object with the following fields:
+    - `address` — EVM or Solana wallet address
+    - `message` — Signed SIWX message. EVM wallets use EIP-4361 SIWE; Solana wallets use the Solana SIWX message format.
+    - `signature` — S
+  sources:
+  - openapi/venice-ai-openapi.yml

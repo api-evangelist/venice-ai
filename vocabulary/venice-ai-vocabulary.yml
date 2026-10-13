@@ -1,0 +1,364 @@
+generated: '2026-10-13'
+method: derived
+generator: derive-vocabulary.py
+source: openapi/venice-ai-openapi.yml
+vocabulary:
+  name: Venice.ai Domain Vocabulary
+  description: 'Terms declared by Venice.ai''s own API contract: its resource groups, objects and enumerations, with the contract''s definitions.
+    Derived, not authored.'
+  version: '2026-10-13'
+  terms:
+  - term: Audio
+    definition: Generate speech/audio, transcribe audio, and manage asynchronous audio generation jobs.
+    tags:
+    - Resource Group
+    source: openapi/venice-ai-openapi.yml
+  - term: Chat
+    definition: Given a list of messages comprising a conversation, the model will return a response. Supports multimodal inputs including text,
+      images, audio (input_audio), and video (video_url) for compatible models.
+    tags:
+    - Resource Group
+    source: openapi/venice-ai-openapi.yml
+  - term: Embeddings
+    definition: Create vector embeddings from text. `input` must be a string or an array of strings. Token arrays are not supported. LangChain
+      OpenAIEmbeddings must set `check_embedding_ctx_length=False` to send text instead of tiktoken IDs.
+    tags:
+    - Resource Group
+    source: openapi/venice-ai-openapi.yml
+  - term: Decisions
+    definition: 'Evaluate a state against typed questions and get structured answers (yes/no probabilities, option picks with distributions, rubric
+      scores). **Beta**: This API is currently in beta and may be unstable. Request/response schemas and behavior may change without notice.'
+    tags:
+    - Resource Group
+    source: openapi/venice-ai-openapi.yml
+  - term: Models
+    definition: List and describe the various models available in the API.
+    tags:
+    - Resource Group
+    source: openapi/venice-ai-openapi.yml
+  - term: Image
+    definition: Generate and manipulate images using AI models.
+    tags:
+    - Resource Group
+    source: openapi/venice-ai-openapi.yml
+  - term: Video
+    definition: Generate videos using AI models.
+    tags:
+    - Resource Group
+    source: openapi/venice-ai-openapi.yml
+  - term: Characters
+    definition: List and retrieve character information for use in completions.
+    tags:
+    - Resource Group
+    source: openapi/venice-ai-openapi.yml
+  - term: Billing
+    definition: 'Billing and usage analytics. **Beta**: This API is currently in beta and may be unstable. Endpoints, request/response schemas,
+      and behavior may change without notice.'
+    tags:
+    - Resource Group
+    source: openapi/venice-ai-openapi.yml
+  - term: Crypto RPC
+    definition: Proxy JSON-RPC requests to blockchain nodes. Billed per credit.
+    tags:
+    - Resource Group
+    source: openapi/venice-ai-openapi.yml
+  - term: x402
+    definition: Wallet-based API access using the x402 protocol. No API key required — authenticate with an EVM or Solana wallet. **How it works:**
+      1. **Authenticate** — Send a `SIGN-IN-WITH-X` header (base64-encoded signed SIWX payload) with any request. EVM wallets sign an EIP-4361
+      SIWE message; Solana wallets sign the Solana SIWX message with Ed25519. See the `siwx` security scheme for the exact format. 2. **T
+    tags:
+    - Resource Group
+    source: openapi/venice-ai-openapi.yml
+  - term: StandardError
+    definition: 'Object declared by the contract with fields: error.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/StandardError
+  - term: DetailedError
+    definition: 'Object declared by the contract with fields: details, error.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/DetailedError
+  - term: ApiKeyIpRestrictedError
+    definition: 'Object declared by the contract with fields: error.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/ApiKeyIpRestrictedError
+  - term: ContentViolationError
+    definition: 'Object declared by the contract with fields: error, suggested_prompt.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/ContentViolationError
+  - term: ProviderContentPolicyError
+    definition: 'Object declared by the contract with fields: error.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/ProviderContentPolicyError
+  - term: PayloadTooLargeError
+    definition: 'Object declared by the contract with fields: code, error.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/PayloadTooLargeError
+  - term: ChatCompletionRequest
+    definition: 'Object declared by the contract with fields: frequency_penalty, logprobs, top_logprobs, max_completion_tokens, max_temp, max_tokens,
+      messages, min_p, min_temp, model, n, presence_penalty. (26 more)'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/ChatCompletionRequest
+  - term: input_audio
+    definition: Audio input message type for models that support audio analysis. Audio must be base64-encoded.
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/ChatCompletionContentPartInputAudio
+  - term: video_url
+    definition: Video URL message type for models that support video analysis. Supports both direct URLs and base64-encoded data URLs.
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/ChatCompletionContentPartVideoUrl
+  - term: Responses API Request
+    definition: Request body for the Responses API endpoint. E2EE-capable models are not supported on /api/v1/responses; use /api/v1/chat/completions
+      with the required E2EE headers instead.
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/ResponsesRequest
+  - term: Responses API Response
+    definition: Response from the Responses API endpoint.
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/ResponsesResponse
+  - term: GenerateImageRequest
+    definition: 'Object declared by the contract with fields: anon_user_id, cfg_scale, embed_exif_metadata, format, height, hide_watermark, inpaint,
+      lora_strength, model, negative_prompt, prompt, return_binary. (13 more)'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/GenerateImageRequest
+  - term: SimpleGenerateImageRequest
+    definition: 'Object declared by the contract with fields: background, model, moderation, n, output_compression, output_format, prompt, quality,
+      response_format, size, style, user. (1 more)'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/SimpleGenerateImageRequest
+  - term: UpscaleImageRequest
+    definition: Upscale an image to a higher resolution.
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/UpscaleImageRequest
+  - term: EditImageRequest
+    definition: Edit an image based on the supplied prompt.
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/EditImageRequest
+  - term: MultiEditImageRequest
+    definition: Edit an image by compositing multiple layered input images (up to the per-model maximum) with a single prompt. Supports base64-encoded
+      strings and URLs.
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/MultiEditImageRequest
+  - term: MultiEditImageMultipartRequest
+    definition: Edit an image by compositing multiple layered input image files (up to the per-model maximum) with a single prompt. Only file
+      uploads are supported with multipart/form-data.
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/MultiEditImageMultipartRequest
+  - term: BackgroundRemoveImageRequest
+    definition: Remove the background from an image. Provide either a non-empty base64 image or an image URL.
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/BackgroundRemoveImageRequest
+  - term: BackgroundRemoveImageMultipartRequest
+    definition: Remove the background from an uploaded image file.
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/BackgroundRemoveImageMultipartRequest
+  - term: CreateEmbeddingRequestSchema
+    definition: Create embeddings for the supplied input.
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/CreateEmbeddingRequestSchema
+  - term: CreateDecisionRequestSchema
+    definition: Evaluate a state against a map of typed questions and get back structured answers, one per question.
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/CreateDecisionRequestSchema
+  - term: CreateSpeechRequestSchema
+    definition: Request to generate audio from text.
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/CreateSpeechRequestSchema
+  - term: CreateTranscriptionRequestSchema
+    definition: Request to transcribe audio to text.
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/CreateTranscriptionRequestSchema
+  - term: CreateClonedVoiceRequestSchema
+    definition: Request to create a cloned voice from an audio sample. The returned `vv_` handle is passed back as the `voice` parameter on POST
+      /v1/audio/speech.
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/CreateClonedVoiceRequestSchema
+  - term: QueueVideoRequest
+    definition: Request body for video generation. Available fields and valid values vary by model.
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/QueueVideoRequest
+  - term: QuoteVideoRequest
+    definition: Request body for video price quote. Available fields and valid values vary by model.
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/QuoteVideoRequest
+  - term: CompleteVideoRequest
+    definition: 'Object declared by the contract with fields: model, queue_id.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/CompleteVideoRequest
+  - term: RetrieveVideoRequest
+    definition: 'Object declared by the contract with fields: model, queue_id, delete_media_on_completion.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/RetrieveVideoRequest
+  - term: TextParserRequest
+    definition: Request to parse and extract text from a document file.
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/TextParserRequest
+  - term: TextParserResponse
+    definition: Text parser response containing extracted text and token count.
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/TextParserResponse
+  - term: QueueAudioRequest
+    definition: 'Object declared by the contract with fields: model, prompt, lyrics_prompt, duration_seconds, force_instrumental, lyrics_optimizer,
+      loop, voice, language_code, speed.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/QueueAudioRequest
+  - term: QuoteAudioRequest
+    definition: 'Object declared by the contract with fields: model, duration_seconds, character_count.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/QuoteAudioRequest
+  - term: CompleteAudioRequest
+    definition: 'Object declared by the contract with fields: model, queue_id.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/CompleteAudioRequest
+  - term: RetrieveAudioRequest
+    definition: 'Object declared by the contract with fields: model, queue_id, delete_media_on_completion.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/RetrieveAudioRequest
+  - term: QueueVoiceChangerRequest
+    definition: 'Object declared by the contract with fields: model, file, audio_url, voice, remove_background_noise, seed.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/QueueVoiceChangerRequest
+  - term: QuoteVoiceChangerRequest
+    definition: 'Object declared by the contract with fields: model, duration_seconds.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/QuoteVoiceChangerRequest
+  - term: CompleteVoiceChangerRequest
+    definition: 'Object declared by the contract with fields: model, queue_id.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/CompleteVoiceChangerRequest
+  - term: RetrieveVoiceChangerRequest
+    definition: 'Object declared by the contract with fields: model, queue_id, delete_media_on_completion.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/RetrieveVoiceChangerRequest
+  - term: BillingBalanceResponse
+    definition: Current balance information for the authenticated user
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/BillingBalanceResponse
+  - term: BillingUsageAnalyticsRequest
+    definition: 'Object declared by the contract with fields: lookback, startDate, endDate.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/BillingUsageAnalyticsRequest
+  - term: BillingUsageAnalyticsResponse
+    definition: Aggregated usage analytics response with breakdowns by date, model, and API key
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/BillingUsageAnalyticsResponse
+  - term: BillingUsageHistoryRequest
+    definition: 'Object declared by the contract with fields: currency, cursor, endTimestamp, pageSize, startTimestamp.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/BillingUsageHistoryRequest
+  - term: BillingUsageHistoryResponse
+    definition: The response schema for the billing usage history endpoint
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/BillingUsageHistoryResponse
+  - term: WebScrapeRequest
+    definition: 'Object declared by the contract with fields: url.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/WebScrapeRequest
+  - term: WebSearchRequest
+    definition: 'Object declared by the contract with fields: query, limit, search_provider.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/WebSearchRequest
+  - term: ModelResponse
+    definition: Response schema for model information
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/ModelResponse
+  - term: ModelTraitSchema
+    definition: List of available models
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/ModelTraitSchema
+  - term: ModelCompatibilitySchema
+    definition: List of available models
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/ModelCompatibilitySchema
+  - term: WebScrapeResponse
+    definition: 'Object declared by the contract with fields: url, content, format.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/WebScrapeResponse
+  - term: WebSearchResponse
+    definition: 'Object declared by the contract with fields: query, results.'
+    tags:
+    - Object
+    source: openapi/venice-ai-openapi.yml#/components/schemas/WebSearchResponse
+  - term: Responses
+    definition: 'Resource group in the contract; its operation POST /responses: **Beta**: This endpoint is currently in beta and may be unstable.'
+    tags:
+    - Resource Group
+    source: openapi/venice-ai-openapi.yml
+  - term: API Keys
+    definition: 'Resource group in the contract; its operation GET /api_keys: Return a list of API keys.'
+    tags:
+    - Resource Group
+    source: openapi/venice-ai-openapi.yml
+  - term: Preview
+    definition: 'Resource group in the contract; its operation GET /characters: This is a preview API and may change.'
+    tags:
+    - Resource Group
+    source: openapi/venice-ai-openapi.yml
+  - term: Speech
+    definition: 'Resource group in the contract; its operation POST /audio/speech: Converts text to speech using various voice models and formats.'
+    tags:
+    - Resource Group
+    source: openapi/venice-ai-openapi.yml
+  - term: Transcriptions
+    definition: 'Resource group in the contract; its operation POST /audio/transcriptions: Transcribes audio into the input language.'
+    tags:
+    - Resource Group
+    source: openapi/venice-ai-openapi.yml
+  - term: Voices
+    definition: 'Resource group in the contract; its operation POST /audio/voices: Clone a voice from an audio sample.'
+    tags:
+    - Resource Group
+    source: openapi/venice-ai-openapi.yml
+  - term: Augment
+    definition: 'Resource group in the contract; its operation POST /augment/text-parser: Extracts text from a document file.'
+    tags:
+    - Resource Group
+    source: openapi/venice-ai-openapi.yml
