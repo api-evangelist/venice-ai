@@ -1,0 +1,2263 @@
+openapi: 3.2.0
+info:
+  title: Venice Ai Image API
+  version: '20261012.214344'
+  termsOfService: https://venice.ai/legal/tos
+  x-guidance: 'Venice.ai is an OpenAI-compatible inference API supporting text, image, audio, and video generation.
+
+
+    **Authentication options:**
+
+    - API Key: Use Bearer token in Authorization header
+
+    - x402 Wallet: Use USDC credits via EVM or Solana wallet (no account required)
+
+
+    **For x402 wallet access:**
+
+    1. POST /x402/top-up without headers to get payment requirements
+
+    2. Choose one of the returned Base or Solana payment options and sign a USDC payment using the x402 SDK
+
+    3. POST /x402/top-up with PAYMENT-SIGNATURE header to add credits
+
+    4. Call any inference endpoint with SIGN-IN-WITH-X header
+
+
+    **Pricing:** Prepaid credits consumed per request. Check /models for available models and their capabilities.'
+  description: 'Operations tagged Image across 2 of this provider''s published API definitions: venice-ai-swagger.yaml, venice-ai-openapi.yml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: https://api.venice.ai/api/v1
+security:
+- BearerAuth: []
+tags:
+- description: Generate and manipulate images using AI models.
+  name: Image
+paths:
+  /image/generate:
+    post:
+      description: 'Generate an image based on input parameters
+
+
+        **Authentication:** This endpoint accepts either a Bearer API key or a `SIGN-IN-WITH-X` header for x402 wallet-based authentication. The legacy `X-Sign-In-With-X` header is also accepted during migration. When using x402, a `402 Payment Required` response indicates insufficient balance and includes top-up instructions.'
+      operationId: generateImage
+      parameters:
+      - description: Supported compression encodings (gzip, br). Only applied when return_binary is false.
+        in: header
+        name: Accept-Encoding
+        required: false
+        schema:
+          example: gzip, br
+          type: string
+      security:
+      - BearerAuth: []
+      - siwx: []
+      x-payment-info:
+        price:
+          mode: dynamic
+          currency: USD
+          min: '0.001'
+          max: '10.00'
+        protocols:
+        - x402: {}
+      summary: /api/v1/image/generate
+      tags:
+      - Image
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GenerateImageRequest'
+      responses:
+        '200':
+          description: Successfully generated image
+          headers:
+            X-Balance-Remaining:
+              description: Remaining x402 credit balance in USD after this request (only present for x402 auth).
+              required: false
+              schema:
+                type: string
+                example: '4.230000'
+            Content-Encoding:
+              description: The encoding used to compress the response
+              schema:
+                enum:
+                - gzip
+                - br
+                type: string
+            x-venice-is-blurred:
+              description: Indicates if the generated image is blurred. When Safe Venice is enabled, adult material will be returned blurred.
+              required: false
+              schema:
+                type: boolean
+            x-venice-is-content-violation:
+              description: Indicates if the generated image does not meet Venice terms of service.
+              required: false
+              schema:
+                type: boolean
+            x-venice-model-deprecation-warning:
+              description: A warning that the model is scheduled for deprecation
+              required: false
+              schema:
+                type: string
+            x-venice-model-deprecation-date:
+              description: The date the model is scheduled for deprecation
+              required: false
+              schema:
+                type: string
+                format: date-time
+            x-venice-deprecated:
+              description: Present and set to "true" when the model is deprecated. Absent otherwise.
+              required: false
+              schema:
+                type: string
+                enum:
+                - 'true'
+            x-venice-deprecated-replacement:
+              description: Public API model ID clients should migrate to. Only present when a replacement is published.
+              required: false
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: The ID of the request.
+                    example: generate-image-1234567890
+                  images:
+                    type: array
+                    items:
+                      type: string
+                    description: Base64 encoded image data.
+                  request:
+                    description: The original request data sent to the API.
+                  timing:
+                    type: object
+                    properties:
+                      inferenceDuration:
+                        type: number
+                        description: Duration of inference in milliseconds
+                      inferencePreprocessingTime:
+                        type: number
+                        description: Duration of preprocessing in milliseconds
+                      inferenceQueueTime:
+                        type: number
+                        description: Duration of queueing in milliseconds
+                      total:
+                        type: number
+                        description: Total duration of the request in milliseconds
+                    required:
+                    - inferenceDuration
+                    - inferencePreprocessingTime
+                    - inferenceQueueTime
+                    - total
+                required:
+                - id
+                - images
+                - timing
+            image/jpeg:
+              schema:
+                description: Raw image data when return_binary is true and format is jpeg
+                format: binary
+                type: string
+            image/png:
+              schema:
+                description: Raw image data when return_binary is true and format is png
+                format: binary
+                type: string
+            image/webp:
+              schema:
+                description: Raw image data when return_binary is true and format is webp
+                format: binary
+                type: string
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedError'
+        '401':
+          description: '- Authentication failed
+
+            - This model is only available to Pro users'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '402':
+          description: 'Payment or balance required. Response varies by authentication state:
+
+
+            **API Key users:** Standard error response with `INSUFFICIENT_BALANCE` code. Top up your Venice balance at venice.ai.
+
+
+            **Unauthenticated x402 discovery:** Structured x402 response with `x402Version`, `resource`, `accepts`, and `extensions["sign-in-with-x"]`. The `accepts` array advertises Base and Solana payment requirements.
+
+
+            **Authenticated x402 wallet users with insufficient credit:** Structured response with `PAYMENT_REQUIRED` code containing:
+
+            - `topUpInstructions`: Step-by-step guide to top up via x402 protocol
+
+            - `supportedTokens` / `supportedChains`: Accepted payment methods
+
+            - `siwxChallenge`: Fresh Sign-In-With-X challenge metadata
+
+
+            The `PAYMENT-REQUIRED` header also contains a base64-encoded x402 protocol object with the payment requirements for programmatic discovery.'
+          headers:
+            PAYMENT-REQUIRED:
+              description: Base64-encoded JSON with x402 payment requirements. Present on x402 middleware 402 responses. Decode to choose and sign one accepted payment requirement programmatically.
+              required: false
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/StandardError'
+                - $ref: '#/components/schemas/X402InferencePaymentRequired'
+        '403':
+          $ref: '#/components/responses/ApiKeyIpRestrictedError'
+        '415':
+          description: Invalid request content-type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '500':
+          description: Inference processing failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '503':
+          description: The model is at capacity. Please try again later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+    servers:
+    - url: https://api.venice.ai/api/v1
+  /images/generations:
+    post:
+      description: 'Generate an image based on input parameters using an OpenAI compatible endpoint. This endpoint does not support the full feature set of the Venice Image Generation endpoint, but is compatible with the existing OpenAI endpoint.
+
+
+        **Authentication:** This endpoint accepts either a Bearer API key or a `SIGN-IN-WITH-X` header for x402 wallet-based authentication. The legacy `X-Sign-In-With-X` header is also accepted during migration. When using x402, a `402 Payment Required` response indicates insufficient balance and includes top-up instructions.'
+      operationId: simpleGenerateImage
+      parameters:
+      - description: Supported compression encodings (gzip, br).
+        in: header
+        name: Accept-Encoding
+        required: false
+        schema:
+          example: gzip, br
+          type: string
+      security:
+      - BearerAuth: []
+      - siwx: []
+      x-payment-info:
+        price:
+          mode: dynamic
+          currency: USD
+          min: '0.001'
+          max: '10.00'
+        protocols:
+        - x402: {}
+      summary: /api/v1/image/generations
+      tags:
+      - Image
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimpleGenerateImageRequest'
+      responses:
+        '200':
+          description: Successfully generated image
+          headers:
+            X-Balance-Remaining:
+              description: Remaining x402 credit balance in USD after this request (only present for x402 auth).
+              required: false
+              schema:
+                type: string
+                example: '4.230000'
+            Content-Encoding:
+              description: The encoding used to compress the response
+              schema:
+                enum:
+                - gzip
+                - br
+                type: string
+            x-venice-is-blurred:
+              description: Indicates if the generated image is blurred. When Safe Venice is enabled, adult material will be returned blurred.
+              required: false
+              schema:
+                type: boolean
+            x-venice-is-content-violation:
+              description: Indicates if the generated image does not meet Venice terms of service.
+              required: false
+              schema:
+                type: boolean
+            x-venice-model-deprecation-warning:
+              description: A warning that the model is scheduled for deprecation
+              required: false
+              schema:
+                type: string
+            x-venice-model-deprecation-date:
+              description: The date the model is scheduled for deprecation
+              required: false
+              schema:
+                type: string
+                format: date-time
+            x-venice-deprecated:
+              description: Present and set to "true" when the model is deprecated. Absent otherwise.
+              required: false
+              schema:
+                type: string
+                enum:
+                - 'true'
+            x-venice-deprecated-replacement:
+              description: Public API model ID clients should migrate to. Only present when a replacement is published.
+              required: false
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  created:
+                    type: integer
+                    description: Unix timestamp for when the request was created
+                    example: 1713833628
+                  data:
+                    type: array
+                    items:
+                      anyOf:
+                      - type: object
+                        properties:
+                          b64_json:
+                            type: string
+                            description: Base64-encoded JSON string of the generated image
+                            example: iVBORw0KGgoAAAANSUhEUgAA...
+                        required:
+                        - b64_json
+                      - type: object
+                        properties:
+                          url:
+                            type: string
+                            description: Data URL of the generated image
+                            example: data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...
+                        required:
+                        - url
+                required:
+                - created
+                - data
+                additionalProperties: false
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedError'
+        '401':
+          description: '- Authentication failed
+
+            - This model is only available to Pro users'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '402':
+          description: 'Payment or balance required. Response varies by authentication state:
+
+
+            **API Key users:** Standard error response with `INSUFFICIENT_BALANCE` code. Top up your Venice balance at venice.ai.
+
+
+            **Unauthenticated x402 discovery:** Structured x402 response with `x402Version`, `resource`, `accepts`, and `extensions["sign-in-with-x"]`. The `accepts` array advertises Base and Solana payment requirements.
+
+
+            **Authenticated x402 wallet users with insufficient credit:** Structured response with `PAYMENT_REQUIRED` code containing:
+
+            - `topUpInstructions`: Step-by-step guide to top up via x402 protocol
+
+            - `supportedTokens` / `supportedChains`: Accepted payment methods
+
+            - `siwxChallenge`: Fresh Sign-In-With-X challenge metadata
+
+
+            The `PAYMENT-REQUIRED` header also contains a base64-encoded x402 protocol object with the payment requirements for programmatic discovery.'
+          headers:
+            PAYMENT-REQUIRED:
+              description: Base64-encoded JSON with x402 payment requirements. Present on x402 middleware 402 responses. Decode to choose and sign one accepted payment requirement programmatically.
+              required: false
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/StandardError'
+                - $ref: '#/components/schemas/X402InferencePaymentRequired'
+        '403':
+          $ref: '#/components/responses/ApiKeyIpRestrictedError'
+        '415':
+          description: Invalid request content-type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '500':
+          description: Inference processing failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '503':
+          description: The model is at capacity. Please try again later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+    servers:
+    - url: https://api.venice.ai/api/v1
+  /image/styles:
+    get:
+      description: List available image styles that can be used with the generate API.
+      security:
+      - {}
+      - BearerAuth: []
+      summary: /api/v1/image/styles
+      tags:
+      - Image
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: string
+                    description: List of available image styles
+                    example:
+                    - 3D Model
+                    - Analog Film
+                    - Anime
+                    - Cinematic
+                    - Comic Book
+                  object:
+                    type: string
+                    enum:
+                    - list
+                required:
+                - data
+                - object
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '500':
+          description: An unknown error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+      operationId: getImageStyles
+      x-operation-id-source: derived
+    servers:
+    - url: https://api.venice.ai/api/v1
+  /image/upscale:
+    post:
+      description: 'Upscale an image to a higher resolution. The image can be provided either as a multipart form-data file upload or as a base64-encoded string in a JSON request.
+
+
+        **Authentication:** This endpoint accepts either a Bearer API key or a `SIGN-IN-WITH-X` header for x402 wallet-based authentication. The legacy `X-Sign-In-With-X` header is also accepted during migration. When using x402, a `402 Payment Required` response indicates insufficient balance and includes top-up instructions.'
+      operationId: upscaleImage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpscaleImageRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/UpscaleImageRequest'
+      security:
+      - BearerAuth: []
+      - siwx: []
+      x-payment-info:
+        price:
+          mode: dynamic
+          currency: USD
+          min: '0.001'
+          max: '10.00'
+        protocols:
+        - x402: {}
+      summary: /api/v1/image/upscale
+      tags:
+      - Image
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Balance-Remaining:
+              description: Remaining x402 credit balance in USD after this request (only present for x402 auth).
+              required: false
+              schema:
+                type: string
+                example: '4.230000'
+          content:
+            image/png:
+              schema:
+                format: binary
+                type: string
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedError'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '402':
+          description: 'Payment or balance required. Response varies by authentication state:
+
+
+            **API Key users:** Standard error response with `INSUFFICIENT_BALANCE` code. Top up your Venice balance at venice.ai.
+
+
+            **Unauthenticated x402 discovery:** Structured x402 response with `x402Version`, `resource`, `accepts`, and `extensions["sign-in-with-x"]`. The `accepts` array advertises Base and Solana payment requirements.
+
+
+            **Authenticated x402 wallet users with insufficient credit:** Structured response with `PAYMENT_REQUIRED` code containing:
+
+            - `topUpInstructions`: Step-by-step guide to top up via x402 protocol
+
+            - `supportedTokens` / `supportedChains`: Accepted payment methods
+
+            - `siwxChallenge`: Fresh Sign-In-With-X challenge metadata
+
+
+            The `PAYMENT-REQUIRED` header also contains a base64-encoded x402 protocol object with the payment requirements for programmatic discovery.'
+          headers:
+            PAYMENT-REQUIRED:
+              description: Base64-encoded JSON with x402 payment requirements. Present on x402 middleware 402 responses. Decode to choose and sign one accepted payment requirement programmatically.
+              required: false
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/StandardError'
+                - $ref: '#/components/schemas/X402InferencePaymentRequired'
+        '403':
+          $ref: '#/components/responses/ApiKeyIpRestrictedError'
+        '415':
+          description: Invalid request content-type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '500':
+          description: Inference processing failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '503':
+          description: The model is at capacity. Please try again later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+    servers:
+    - url: https://api.venice.ai/api/v1
+  /image/edit:
+    post:
+      description: 'Edit or modify an image based on the supplied prompt. The image can be provided either as a multipart form-data file upload or as a base64-encoded string in a JSON request. For models with resolution tiers that require explicit dimensions, omit aspect_ratio or set it to auto to infer the closest supported aspect ratio from the input image; provide aspect_ratio directly when exact output dimensions are required. Use output_format to request jpeg, jpg, png, or webp output.
+
+
+        **Authentication:** This endpoint accepts either a Bearer API key or a `SIGN-IN-WITH-X` header for x402 wallet-based authentication. The legacy `X-Sign-In-With-X` header is also accepted during migration. When using x402, a `402 Payment Required` response indicates insufficient balance and includes top-up instructions.'
+      operationId: editImage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/EditImageRequest'
+              - type: object
+                properties:
+                  modelId:
+                    type: string
+                    enum:
+                    - firered-image-edit
+                    - qwen-edit-uncensored
+                    - grok-imagine-edit
+                    - grok-imagine-quality-edit
+                    - grok-imagine-image-2-0-edit
+                    - qwen-image-2-edit
+                    - qwen-image-2-pro-edit
+                    - wan-2-7-pro-edit
+                    - flux-2-max-edit
+                    - flux-3-image-edit
+                    - gpt-image-2-5-flare-edit
+                    - gpt-image-2-5-sunburst-edit
+                    - gpt-image-2-edit
+                    - gpt-image-1-5-edit
+                    - ideogram-v4-5-edit
+                    - nano-banana-2-edit
+                    - nano-banana-2-1-edit
+                    - nano-banana-pro-edit
+                    - nano-banana-2-lite-edit
+                    - luma-uni-1-edit
+                    - luma-uni-1-max-edit
+                    - muse-image-edit
+                    - seedream-v5-lite-edit
+                    - seedream-v5-pro-edit
+                    - seedream-v4-edit
+                    - qwen-image-3-edit
+                    - qwen-image-3-pro-edit
+                    - qwen-image-2-1-turbo-edit
+                    - qwen-image-2-1-pro-edit
+          multipart/form-data:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/EditImageRequest'
+              - type: object
+                properties:
+                  modelId:
+                    type: string
+                    enum:
+                    - firered-image-edit
+                    - qwen-edit-uncensored
+                    - grok-imagine-edit
+                    - grok-imagine-quality-edit
+                    - grok-imagine-image-2-0-edit
+                    - qwen-image-2-edit
+                    - qwen-image-2-pro-edit
+                    - wan-2-7-pro-edit
+                    - flux-2-max-edit
+                    - flux-3-image-edit
+                    - gpt-image-2-5-flare-edit
+                    - gpt-image-2-5-sunburst-edit
+                    - gpt-image-2-edit
+                    - gpt-image-1-5-edit
+                    - ideogram-v4-5-edit
+                    - nano-banana-2-edit
+                    - nano-banana-2-1-edit
+                    - nano-banana-pro-edit
+                    - nano-banana-2-lite-edit
+                    - luma-uni-1-edit
+                    - luma-uni-1-max-edit
+                    - muse-image-edit
+                    - seedream-v5-lite-edit
+                    - seedream-v5-pro-edit
+                    - seedream-v4-edit
+                    - qwen-image-3-edit
+                    - qwen-image-3-pro-edit
+                    - qwen-image-2-1-turbo-edit
+                    - qwen-image-2-1-pro-edit
+      security:
+      - BearerAuth: []
+      - siwx: []
+      x-payment-info:
+        price:
+          mode: dynamic
+          currency: USD
+          min: '0.001'
+          max: '10.00'
+        protocols:
+        - x402: {}
+      summary: /api/v1/image/edit
+      tags:
+      - Image
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Balance-Remaining:
+              description: Remaining x402 credit balance in USD after this request (only present for x402 auth).
+              required: false
+              schema:
+                type: string
+                example: '4.230000'
+            x-venice-is-content-violation:
+              description: Indicates if the generated image does not meet Venice terms of service.
+              required: false
+              schema:
+                type: boolean
+            x-venice-model-id:
+              description: The ID of the model used for the edit.
+              required: false
+              schema:
+                type: string
+            x-venice-model-name:
+              description: The friendly name of the model used for the edit.
+              required: false
+              schema:
+                type: string
+            x-venice-model-deprecation-warning:
+              description: A warning that the model is scheduled for deprecation
+              required: false
+              schema:
+                type: string
+            x-venice-model-deprecation-date:
+              description: The date the model is scheduled for deprecation
+              required: false
+              schema:
+                type: string
+                format: date-time
+            x-venice-deprecated:
+              description: Present and set to "true" when the model is deprecated. Absent otherwise.
+              required: false
+              schema:
+                type: string
+                enum:
+                - 'true'
+            x-venice-deprecated-replacement:
+              description: Public API model ID clients should migrate to. Only present when a replacement is published.
+              required: false
+              schema:
+                type: string
+          content:
+            image/png:
+              schema:
+                format: binary
+                type: string
+            image/jpeg:
+              schema:
+                format: binary
+                type: string
+            image/webp:
+              schema:
+                format: binary
+                type: string
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedError'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '402':
+          description: 'Payment or balance required. Response varies by authentication state:
+
+
+            **API Key users:** Standard error response with `INSUFFICIENT_BALANCE` code. Top up your Venice balance at venice.ai.
+
+
+            **Unauthenticated x402 discovery:** Structured x402 response with `x402Version`, `resource`, `accepts`, and `extensions["sign-in-with-x"]`. The `accepts` array advertises Base and Solana payment requirements.
+
+
+            **Authenticated x402 wallet users with insufficient credit:** Structured response with `PAYMENT_REQUIRED` code containing:
+
+            - `topUpInstructions`: Step-by-step guide to top up via x402 protocol
+
+            - `supportedTokens` / `supportedChains`: Accepted payment methods
+
+            - `siwxChallenge`: Fresh Sign-In-With-X challenge metadata
+
+
+            The `PAYMENT-REQUIRED` header also contains a base64-encoded x402 protocol object with the payment requirements for programmatic discovery.'
+          headers:
+            PAYMENT-REQUIRED:
+              description: Base64-encoded JSON with x402 payment requirements. Present on x402 middleware 402 responses. Decode to choose and sign one accepted payment requirement programmatically.
+              required: false
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/StandardError'
+                - $ref: '#/components/schemas/X402InferencePaymentRequired'
+        '403':
+          $ref: '#/components/responses/ApiKeyIpRestrictedError'
+        '415':
+          description: Invalid request content-type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '500':
+          description: Inference processing failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '503':
+          description: The model is at capacity. Please try again later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+    servers:
+    - url: https://api.venice.ai/api/v1
+  /image/multi-edit:
+    post:
+      description: 'Edit or modify an image using multiple layered inputs (base image plus masks/overlays), up to the selected model''s maximum input images (see the capabilities.maxInputImages field in GET /api/v1/models).
+
+
+        **Supported input formats by Content-Type:**
+
+
+        - **multipart/form-data**: Only file uploads are supported. Send images as form file fields.
+
+
+        - **application/json**: Base64 strings and URLs are supported:
+
+        - Raw base64 string: `"iVBORw0KGgoAAAANSUhEUgAA..."`
+
+        - Data URL: `"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA..."`
+
+        - HTTP/HTTPS URL: `"https://example.com/image.png"`
+
+
+        For models with resolution tiers that require explicit dimensions, omit `aspect_ratio` or set it to `auto` to infer the closest supported aspect ratio from the first input image. Provide `aspect_ratio` directly when exact output dimensions are required. Use `output_format` to request jpeg, jpg, png, or webp output.
+
+
+        **Authentication:** This endpoint accepts either a Bearer API key or a `SIGN-IN-WITH-X` header for x402 wallet-based authentication. The legacy `X-Sign-In-With-X` header is also accepted during migration. When using x402, a `402 Payment Required` response indicates insufficient balance and includes top-up instructions.'
+      operationId: multiEditImage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/MultiEditImageRequest'
+              - type: object
+                properties:
+                  modelId:
+                    type: string
+                    enum:
+                    - firered-image-edit
+                    - qwen-edit-uncensored
+                    - grok-imagine-edit
+                    - grok-imagine-quality-edit
+                    - grok-imagine-image-2-0-edit
+                    - qwen-image-2-edit
+                    - qwen-image-2-pro-edit
+                    - wan-2-7-pro-edit
+                    - flux-2-max-edit
+                    - flux-3-image-edit
+                    - gpt-image-2-5-flare-edit
+                    - gpt-image-2-5-sunburst-edit
+                    - gpt-image-2-edit
+                    - gpt-image-1-5-edit
+                    - ideogram-v4-5-edit
+                    - nano-banana-2-edit
+                    - nano-banana-2-1-edit
+                    - nano-banana-pro-edit
+                    - nano-banana-2-lite-edit
+                    - muse-image-edit
+                    - seedream-v5-lite-edit
+                    - seedream-v5-pro-edit
+                    - seedream-v4-edit
+                    - qwen-image-3-edit
+                    - qwen-image-3-pro-edit
+                    - qwen-image-2-1-turbo-edit
+                    - qwen-image-2-1-pro-edit
+          multipart/form-data:
+            schema:
+              allOf:
+              - $ref: '#/components/schemas/MultiEditImageMultipartRequest'
+              - type: object
+                properties:
+                  modelId:
+                    type: string
+                    enum:
+                    - firered-image-edit
+                    - qwen-edit-uncensored
+                    - grok-imagine-edit
+                    - grok-imagine-quality-edit
+                    - grok-imagine-image-2-0-edit
+                    - qwen-image-2-edit
+                    - qwen-image-2-pro-edit
+                    - wan-2-7-pro-edit
+                    - flux-2-max-edit
+                    - flux-3-image-edit
+                    - gpt-image-2-5-flare-edit
+                    - gpt-image-2-5-sunburst-edit
+                    - gpt-image-2-edit
+                    - gpt-image-1-5-edit
+                    - ideogram-v4-5-edit
+                    - nano-banana-2-edit
+                    - nano-banana-2-1-edit
+                    - nano-banana-pro-edit
+                    - nano-banana-2-lite-edit
+                    - muse-image-edit
+                    - seedream-v5-lite-edit
+                    - seedream-v5-pro-edit
+                    - seedream-v4-edit
+                    - qwen-image-3-edit
+                    - qwen-image-3-pro-edit
+                    - qwen-image-2-1-turbo-edit
+                    - qwen-image-2-1-pro-edit
+      security:
+      - BearerAuth: []
+      - siwx: []
+      x-payment-info:
+        price:
+          mode: dynamic
+          currency: USD
+          min: '0.001'
+          max: '10.00'
+        protocols:
+        - x402: {}
+      summary: /api/v1/image/multi-edit
+      tags:
+      - Image
+      responses:
+        '200':
+          description: OK
+          headers:
+            X-Balance-Remaining:
+              description: Remaining x402 credit balance in USD after this request (only present for x402 auth).
+              required: false
+              schema:
+                type: string
+                example: '4.230000'
+            x-venice-is-content-violation:
+              description: Indicates if the generated image does not meet Venice terms of service.
+              required: false
+              schema:
+                type: boolean
+            x-venice-model-deprecation-warning:
+              description: A warning that the model is scheduled for deprecation
+              required: false
+              schema:
+                type: string
+            x-venice-model-deprecation-date:
+              description: The date the model is scheduled for deprecation
+              required: false
+              schema:
+                type: string
+                format: date-time
+            x-venice-deprecated:
+              description: Present and set to "true" when the model is deprecated. Absent otherwise.
+              required: false
+              schema:
+                type: string
+                enum:
+                - 'true'
+            x-venice-deprecated-replacement:
+              description: Public API model ID clients should migrate to. Only present when a replacement is published.
+              required: false
+              schema:
+                type: string
+          content:
+            image/png:
+              schema:
+                format: binary
+                type: string
+            image/jpeg:
+              schema:
+                format: binary
+                type: string
+            image/webp:
+              schema:
+                format: binary
+                type: string
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedError'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '402':
+          description: 'Payment or balance required. Response varies by authentication state:
+
+
+            **API Key users:** Standard error response with `INSUFFICIENT_BALANCE` code. Top up your Venice balance at venice.ai.
+
+
+            **Unauthenticated x402 discovery:** Structured x402 response with `x402Version`, `resource`, `accepts`, and `extensions["sign-in-with-x"]`. The `accepts` array advertises Base and Solana payment requirements.
+
+
+            **Authenticated x402 wallet users with insufficient credit:** Structured response with `PAYMENT_REQUIRED` code containing:
+
+            - `topUpInstructions`: Step-by-step guide to top up via x402 protocol
+
+            - `supportedTokens` / `supportedChains`: Accepted payment methods
+
+            - `siwxChallenge`: Fresh Sign-In-With-X challenge metadata
+
+
+            The `PAYMENT-REQUIRED` header also contains a base64-encoded x402 protocol object with the payment requirements for programmatic discovery.'
+          headers:
+            PAYMENT-REQUIRED:
+              description: Base64-encoded JSON with x402 payment requirements. Present on x402 middleware 402 responses. Decode to choose and sign one accepted payment requirement programmatically.
+              required: false
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/StandardError'
+                - $ref: '#/components/schemas/X402InferencePaymentRequired'
+        '403':
+          $ref: '#/components/responses/ApiKeyIpRestrictedError'
+        '415':
+          description: Invalid request content-type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '500':
+          description: Inference processing failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '503':
+          description: The model is at capacity. Please try again later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+    servers:
+    - url: https://api.venice.ai/api/v1
+  /image/background-remove:
+    post:
+      description: 'Remove the background from an image using AI. The image can be provided either as a multipart form-data file upload, as a base64-encoded string in a JSON request, or as an image URL. Returns a PNG image with transparent background.
+
+
+        **Authentication:** This endpoint accepts either a Bearer API key or a `SIGN-IN-WITH-X` header for x402 wallet-based authentication. The legacy `X-Sign-In-With-X` header is also accepted during migration. When using x402, a `402 Payment Required` response indicates insufficient balance and includes top-up instructions.'
+      operationId: backgroundRemoveImage
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BackgroundRemoveImageRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BackgroundRemoveImageMultipartRequest'
+      security:
+      - BearerAuth: []
+      - siwx: []
+      x-payment-info:
+        price:
+          mode: dynamic
+          currency: USD
+          min: '0.001'
+          max: '10.00'
+        protocols:
+        - x402: {}
+      summary: /api/v1/image/background-remove
+      tags:
+      - Image
+      responses:
+        '200':
+          description: OK - PNG image with transparent background
+          headers:
+            X-Balance-Remaining:
+              description: Remaining x402 credit balance in USD after this request (only present for x402 auth).
+              required: false
+              schema:
+                type: string
+                example: '4.230000'
+          content:
+            image/png:
+              schema:
+                format: binary
+                type: string
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedError'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '402':
+          description: 'Payment or balance required. Response varies by authentication state:
+
+
+            **API Key users:** Standard error response with `INSUFFICIENT_BALANCE` code. Top up your Venice balance at venice.ai.
+
+
+            **Unauthenticated x402 discovery:** Structured x402 response with `x402Version`, `resource`, `accepts`, and `extensions["sign-in-with-x"]`. The `accepts` array advertises Base and Solana payment requirements.
+
+
+            **Authenticated x402 wallet users with insufficient credit:** Structured response with `PAYMENT_REQUIRED` code containing:
+
+            - `topUpInstructions`: Step-by-step guide to top up via x402 protocol
+
+            - `supportedTokens` / `supportedChains`: Accepted payment methods
+
+            - `siwxChallenge`: Fresh Sign-In-With-X challenge metadata
+
+
+            The `PAYMENT-REQUIRED` header also contains a base64-encoded x402 protocol object with the payment requirements for programmatic discovery.'
+          headers:
+            PAYMENT-REQUIRED:
+              description: Base64-encoded JSON with x402 payment requirements. Present on x402 middleware 402 responses. Decode to choose and sign one accepted payment requirement programmatically.
+              required: false
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/StandardError'
+                - $ref: '#/components/schemas/X402InferencePaymentRequired'
+        '403':
+          $ref: '#/components/responses/ApiKeyIpRestrictedError'
+        '415':
+          description: Invalid request content-type
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '500':
+          description: Inference processing failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '503':
+          description: The model is at capacity. Please try again later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+    servers:
+    - url: https://api.venice.ai/api/v1
+components:
+  schemas:
+    BackgroundRemoveImageMultipartRequest:
+      type: object
+      properties:
+        anon_user_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[\x20-\x7E]+$
+          description: Optional identifier for the API customer's end user. Combined with the Venice user id when attributing the request to upstream providers. Distinct from the discarded OpenAI `user` field. Must be printable ASCII and must not contain `||`.
+          example: end-user-123
+        image:
+          type: string
+          description: The non-empty image file to remove the background from. File size must be less than 25MB.
+          format: binary
+          minLength: 1
+      required:
+      - image
+      additionalProperties: false
+      description: Remove the background from an uploaded image file.
+    SimpleGenerateImageRequest:
+      type: object
+      properties:
+        background:
+          type:
+          - string
+          - 'null'
+          enum:
+          - transparent
+          - opaque
+          - auto
+          default: auto
+          description: This parameter is not used in Venice image generation but is supported for compatibility with OpenAI API
+          example: auto
+        model:
+          type: string
+          default: default
+          description: The model to use for image generation. Defaults to Venice's default image model. If a non-existent model is specified (ie an OpenAI model name), it will default to Venice's default image model.
+          example: grok-imagine-image
+        moderation:
+          type:
+          - string
+          - 'null'
+          enum:
+          - low
+          - auto
+          default: auto
+          description: Controls blurring of images classified as adult content. auto (the default, also used when null) blurs them; low returns unblurred output. This is the OpenAI-compatible equivalent of safe_mode on /image/generate. No Pro subscription is required, and the mature filter setting in the Venice app does not affect this. The x-venice-is-blurred response header reports whether the returned image was blurred.
+          example: auto
+        n:
+          type:
+          - integer
+          - 'null'
+          minimum: 1
+          maximum: 1
+          default: 1
+          description: Number of images to generate. Venice presently only supports 1 image per request.
+          example: 1
+        output_compression:
+          type:
+          - integer
+          - 'null'
+          minimum: 0
+          maximum: 100
+          default: 100
+          description: This parameter is not used in Venice image generation but is supported for compatibility with OpenAI API
+        output_format:
+          type: string
+          enum:
+          - jpeg
+          - png
+          - webp
+          default: png
+          description: Output format for generated images
+          example: png
+        prompt:
+          type: string
+          minLength: 1
+          maxLength: 1500
+          description: A text description of the desired image.
+          example: A beautiful sunset over mountain ranges
+        quality:
+          type:
+          - string
+          - 'null'
+          enum:
+          - auto
+          - high
+          - medium
+          - low
+          - hd
+          - standard
+          default: auto
+          description: This parameter is not used in Venice image generation but is supported for compatibility with OpenAI API
+          example: auto
+        response_format:
+          type:
+          - string
+          - 'null'
+          enum:
+          - b64_json
+          - url
+          default: b64_json
+          description: Response format. URL will be a data URL.
+          example: b64_json
+        size:
+          type:
+          - string
+          - 'null'
+          enum:
+          - auto
+          - 256x256
+          - 512x512
+          - 1024x1024
+          - 1536x1024
+          - 1024x1536
+          - 1792x1024
+          - 1024x1792
+          default: auto
+          description: Size of generated images. Default is 1024x1024
+          example: 1024x1024
+        style:
+          type:
+          - string
+          - 'null'
+          enum:
+          - vivid
+          - natural
+          default: natural
+          description: This parameter is not used in Venice image generation but is supported for compatibility with OpenAI API
+          example: natural
+        user:
+          type: string
+          description: This parameter is discarded and is supported for compatibility with OpenAI API. It is not an alias of anon_user_id.
+          example: user123
+        anon_user_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[\x20-\x7E]+$
+          description: Optional identifier for the API customer's end user. Combined with the Venice user id when attributing the request to upstream providers. Distinct from the discarded OpenAI `user` field. Must be printable ASCII and must not contain `||`.
+          example: end-user-123
+      required:
+      - prompt
+      additionalProperties: false
+    UpscaleImageRequest:
+      type: object
+      properties:
+        creativity:
+          type:
+          - number
+          - 'null'
+          default: 0.01
+          description: How much detail and texture the upscaler adds. Higher values add more; lower values stay closer to the source. Clamped to the 0–0.02 range.
+          example: 0.01
+        image:
+          anyOf:
+          - {}
+          - type: string
+          description: The image to upscale. Can be either a file upload or a base64-encoded string. Image dimensions must be at least 65536 pixels and final dimensions after scaling must not exceed 16777216 pixels. File size must be less than 25MB.
+        scale:
+          type: number
+          minimum: 2
+          maximum: 4
+          default: 2
+          description: The scale factor for upscaling the image. Must be either 2 or 4. A scale of 4 with large images will result in the scale being dynamically reduced to ensure the final image stays within the maximum size limits.
+          example: 2
+      required:
+      - image
+      description: Upscale an image to a higher resolution.
+      example:
+        creativity: 0.01
+        image: iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAIAAAB7GkOtAAAAIGNIUk0A...
+        scale: 2
+    DetailedError:
+      type: object
+      properties:
+        details:
+          type: object
+          properties: {}
+          description: Details about the incorrect input
+          example:
+            _errors: []
+            field:
+              _errors:
+              - Field is required
+        error:
+          type: string
+          description: A description of the error
+      required:
+      - error
+    GenerateImageRequest:
+      type: object
+      properties:
+        anon_user_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[\x20-\x7E]+$
+          description: Optional identifier for the API customer's end user. Combined with the Venice user id when attributing the request to upstream providers. Distinct from the discarded OpenAI `user` field. Must be printable ASCII and must not contain `||`.
+          example: end-user-123
+        cfg_scale:
+          type: number
+          maximum: 20
+          description: CFG scale parameter. Higher values lead to more adherence to the prompt.
+          example: 7.5
+          exclusiveMinimum: 0
+        embed_exif_metadata:
+          type: boolean
+          default: false
+          description: Embed prompt generation information into the image's EXIF metadata.
+          example: false
+        format:
+          type: string
+          enum:
+          - jpeg
+          - png
+          - webp
+          default: webp
+          description: 'The image format to return. WebP are smaller and optimized for web use. PNG are higher quality but larger in file size. '
+          example: webp
+        height:
+          type: integer
+          maximum: 1280
+          default: 1024
+          description: Height of the generated image.
+          example: 1024
+          exclusiveMinimum: 0
+        hide_watermark:
+          type: boolean
+          default: false
+          description: Whether to hide the Venice watermark. Venice may ignore this parameter for certain generated content.
+          example: false
+        inpaint:
+          description: This feature is deprecated and was disabled on May 19th, 2025. A revised in-painting API will be launched in the near future.
+          deprecated: true
+        lora_strength:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Lora strength for the model. Only applies if the model uses additional Loras.
+          example: 50
+        model:
+          type: string
+          description: The model to use for image generation.
+          example: grok-imagine-image
+        negative_prompt:
+          type: string
+          maxLength: 7500
+          description: A description of what should not be in the image. Character limit is model specific and is listed in the promptCharacterLimit constraint in the model list endpoint.
+          example: Clouds, Rain, Snow
+        prompt:
+          type: string
+          minLength: 1
+          maxLength: 7500
+          description: The description for the image. Character limit is model specific and is listed in the promptCharacterLimit setting in the model list endpoint.
+          example: A beautiful sunset over a mountain range
+        return_binary:
+          type: boolean
+          default: false
+          description: Whether to return binary image data instead of base64.
+          example: false
+        variants:
+          type: integer
+          minimum: 1
+          maximum: 4
+          description: Number of images to generate (1–4). Only supported when return_binary is false.
+          example: 3
+        safe_mode:
+          type: boolean
+          default: true
+          description: Whether to blur images classified as adult content. Defaults to true. Set to false to receive unblurred output. No Pro subscription is required, and the mature filter setting in the Venice app does not affect this. The x-venice-is-blurred response header reports whether the returned image was blurred.
+          example: false
+        seed:
+          type: integer
+          minimum: -999999999
+          maximum: 999999999
+          default: 0
+          description: Random seed for generation. If not provided, a random seed will be used.
+          example: 123456789
+        steps:
+          type: integer
+          default: 8
+          description: Number of inference steps. This model does not support steps - this field is ignored.
+          example: 8
+        style_preset:
+          type: string
+          description: An image style to apply to the image. Visit https://docs.venice.ai/api-reference/endpoint/image/styles for more details.
+          example: 3D Model
+        aspect_ratio:
+          type: string
+          description: 'Aspect ratio (utilized by certain image models including Nano Banana). Examples: "1:1", "16:9".'
+          example: 61
+        resolution:
+          type: string
+          description: 'Resolution (utilized by certain image models including Nano Banana). Examples: "1K", "2K", "4K".'
+          example: 1K
+        quality:
+          type: string
+          enum:
+          - low
+          - medium
+          - high
+          description: Output quality for supported models (e.g. GPT Image 2 / GPT Image 2 Edit). Higher values can increase the final request charge. See the model list for supported options.
+          example: high
+        enable_web_search:
+          type: boolean
+          description: Enable web search for the image generation task. This will allow the model to use the latest information from the web to generate the image. Only supported by certain models. If web search is used, additional credits are getting charged.
+          example: false
+        disable_prompt_optimization_thinking:
+          type: boolean
+          description: Skip the model's prompt-optimization thinking step for faster generation. Only supported by models with `supportsOptimizePromptThinking`; ignored by others. Omit to use the model default.
+          example: false
+        enhance_prompt:
+          type: boolean
+          description: Rewrite the prompt before generation to add clarifying visual detail. Additional credits are charged when a rewrite is generated. Adds up to ~30 seconds before generation starts. When enhancement is applied, the final prompt is returned URL-encoded in the `x-venice-enhanced-prompt` response header. Defaults to false.
+          example: false
+        width:
+          type: integer
+          maximum: 1280
+          default: 1024
+          description: Width of the generated image.
+          example: 1024
+          exclusiveMinimum: 0
+        style_references:
+          type: array
+          items:
+            type: object
+            properties:
+              image:
+                anyOf:
+                - type: string
+                - type: string
+                  format: uri
+                description: A style reference image as a base64-encoded string (raw or data URI) or a URL starting with http:// or https://. Must be less than 8MB.
+                example: https://example.com/style-reference.png
+              strength:
+                type: number
+                minimum: 0.1
+                maximum: 1
+                description: How strongly the reference guides the output (0.1–1). Defaults to 0.5. Ignored by models where supportsStyleReferenceStrength is false.
+                example: 0.5
+            required:
+            - image
+            additionalProperties: false
+          description: 'Style reference images that guide the aesthetic of the generated image. Only supported by models with `supportsStyleReferences: true` (see GET /api/v1/models for the per-model `maxStyleReferences` limit).'
+          example:
+          - image: https://example.com/style-reference.png
+            strength: 0.5
+      required:
+      - model
+      - prompt
+      additionalProperties: false
+    EditImageRequest:
+      type: object
+      properties:
+        anon_user_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[\x20-\x7E]+$
+          description: Optional identifier for the API customer's end user. Combined with the Venice user id when attributing the request to upstream providers. Distinct from the discarded OpenAI `user` field. Must be printable ASCII and must not contain `||`.
+          example: end-user-123
+        aspect_ratio:
+          type: string
+          enum:
+          - auto
+          - 61
+          - 182
+          - 969
+          - 1269
+          - 556
+          - 123
+          - 184
+          - 243
+          - 245
+          description: The aspect ratio for the output image. Use 'auto' or omit this parameter to infer the closest supported aspect ratio from the input image when explicit sizing is required by the model. Supported values vary by model - check GET /api/v1/models for model-specific options.
+          example: 969
+        disable_prompt_optimization_thinking:
+          type: boolean
+          description: Skip the model's prompt-optimization thinking step for faster generation. Only supported by models with `supportsOptimizePromptThinking`; ignored by others. Omit to use the model default.
+          example: false
+        enhance_prompt:
+          type: boolean
+          description: Rewrite the edit prompt using the input image before editing to add clarifying detail. Additional credits are charged when a rewrite is generated. Adds up to ~30 seconds. When enhancement is applied, the final prompt is returned URL-encoded in the `x-venice-enhanced-prompt` response header. Defaults to false.
+          example: false
+        resolution:
+          type: string
+          minLength: 1
+          maxLength: 10
+          description: Resolution tier for the output image (e.g. "1K", "2K", "4K"). Supported values vary by model - check GET /api/v1/models for model-specific options. Defaults to "1K" when not specified.
+          example: 1K
+        image:
+          anyOf:
+          - {}
+          - type: string
+          - type: string
+            format: uri
+          description: The image to edit. Can be either a file upload, a base64-encoded string, or a URL starting with http:// or https://. Image dimensions must be at least 65536 pixels and must not exceed 33177600 pixels. File size must be less than 25MB.
+        model:
+          type: string
+          minLength: 1
+          default: firered-image-edit
+          description: The model ID to use for image editing.
+        modelId:
+          type: string
+          minLength: 1
+          description: 'Deprecated: Use "model" instead. The model ID to use for image editing.'
+          deprecated: true
+        output_format:
+          type: string
+          enum:
+          - jpeg
+          - png
+          - webp
+          description: 'Output format for the edited image. Accepts jpeg, jpg, png, or webp. When omitted, the format is inferred from resolution: PNG for 1K edits and JPEG for 2K/4K edits.'
+          example: png
+        prompt:
+          type: string
+          minLength: 1
+          maxLength: 32768
+          description: The text directions to edit or modify the image. Short, descriptive prompts work best (e.g., "remove the tree", "change the sky to sunrise"). Character limit is model specific and is listed in the promptCharacterLimit setting in the model list endpoint.
+          example: Change the color of the sky to a sunrise
+        safe_mode:
+          type: boolean
+          default: true
+          description: Whether to blur images classified as adult content. Defaults to true. Set to false to receive unblurred output. No Pro subscription is required, and the mature filter setting in the Venice app does not affect this. The x-venice-is-blurred response header reports whether the returned image was blurred.
+          example: false
+      required:
+      - image
+      - prompt
+      additionalProperties: false
+      description: Edit an image based on the supplied prompt.
+      example:
+        prompt: Colorize
+        image: iVBORw0KGgoAAAANSUhEUgAAAgAAAAIACAIAAAB7GkOtAAAAIGNIUk0A...
+    BackgroundRemoveImageRequest:
+      anyOf:
+      - type: object
+        properties:
+          anon_user_id:
+            type: string
+            minLength: 1
+            maxLength: 128
+            pattern: ^[\x20-\x7E]+$
+            description: Optional identifier for the API customer's end user. Combined with the Venice user id when attributing the request to upstream providers. Distinct from the discarded OpenAI `user` field. Must be printable ASCII and must not contain `||`.
+            example: end-user-123
+          image:
+            type: string
+            minLength: 1
+            pattern: \S
+            description: The non-empty base64-encoded image to remove the background from.
+        required:
+        - image
+        additionalProperties: false
+      - type: object
+        properties:
+          anon_user_id:
+            type: string
+            minLength: 1
+            maxLength: 128
+            pattern: ^[\x20-\x7E]+$
+            description: Optional identifier for the API customer's end user. Combined with the Venice user id when attributing the request to upstream providers. Distinct from the discarded OpenAI `user` field. Must be printable ASCII and must not contain `||`.
+            example: end-user-123
+          image_url:
+            type: string
+            format: uri
+            description: URL of the image to remove the background from.
+            example: https://example.com/image.jpg
+        required:
+        - image_url
+        additionalProperties: false
+      description: Remove the background from an image. Provide either a non-empty base64 image or an image URL.
+      example:
+        image_url: https://example.com/image.jpg
+    MultiEditImageMultipartRequest:
+      type: object
+      properties:
+        anon_user_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[\x20-\x7E]+$
+          description: Optional identifier for the API customer's end user. Combined with the Venice user id when attributing the request to upstream providers. Distinct from the discarded OpenAI `user` field. Must be printable ASCII and must not contain `||`.
+          example: end-user-123
+        aspect_ratio:
+          type: string
+          enum:
+          - auto
+          - 61
+          - 182
+          - 969
+          - 1269
+          - 556
+          - 123
+          - 184
+          - 243
+          - 245
+          description: The aspect ratio for the output image. Use 'auto' or omit this parameter to infer the closest supported aspect ratio from the first input image when explicit sizing is required by the model.
+          example: 969
+        modelId:
+          type: string
+          minLength: 1
+          default: firered-image-edit
+          description: The model ID to use for multi-edit.
+        output_format:
+          type: string
+          enum:
+          - jpeg
+          - png
+          - webp
+          description: 'Output format for the edited image. Accepts jpeg, jpg, png, or webp. When omitted, the format is inferred from resolution: PNG for 1K edits and JPEG for 2K/4K edits.'
+          example: png
+        prompt:
+          type: string
+          minLength: 1
+          maxLength: 32768
+          description: The text directions to edit or modify the image. Short, descriptive prompts work best (e.g., "remove the tree", "change the sky to sunrise"). Character limit is model specific and is listed in the promptCharacterLimit setting in the model list endpoint.
+        images:
+          type: array
+          items:
+            type: string
+            format: binary
+          minItems: 1
+          description: Image files (minimum 1). The maximum is model-specific — see `capabilities.maxInputImages` from GET /api/v1/models. The first image is treated as the base image, and the remaining images are used as edit layers/masks.
+        quality:
+          type: string
+          enum:
+          - low
+          - medium
+          - high
+          description: Output quality for supported models (e.g. GPT Image 2 / GPT Image 2 Edit). Higher values can increase the final request charge. See the model list for supported options.
+          example: high
+        resolution:
+          type: string
+          minLength: 1
+          maxLength: 10
+          description: Resolution tier for the output image (e.g. "1K", "2K", "4K"). Supported values vary by model - check GET /api/v1/models for model-specific options. Defaults to "1K" when not specified.
+          example: 1K
+        safe_mode:
+          type: boolean
+          default: true
+          description: Whether to blur images classified as adult content. Defaults to true. Set to false to receive unblurred output. No Pro subscription is required, and the mature filter setting in the Venice app does not affect this. The x-venice-is-blurred response header reports whether the returned image was blurred.
+          example: false
+        disable_prompt_optimization_thinking:
+          type: boolean
+          description: Skip the model's prompt-optimization thinking step for faster generation. Only supported by models with `supportsOptimizePromptThinking`; ignored by others. Omit to use the model default.
+          example: false
+        enhance_prompt:
+          type: boolean
+          description: Rewrite the edit prompt using the input images before editing to add clarifying detail. Additional credits are charged when a rewrite is generated. Adds up to ~30 seconds. When enhancement is applied, the final prompt is returned URL-encoded in the `x-venice-enhanced-prompt` response header. Defaults to false.
+          example: false
+      required:
+      - prompt
+      - images
+      description: Edit an image by compositing multiple layered input image files (up to the per-model maximum) with a single prompt. Only file uploads are supported with multipart/form-data.
+    X402InferencePaymentRequired:
+      anyOf:
+      - type: object
+        properties:
+          x402Version:
+            type: number
+            description: x402 protocol version.
+            example: 2
+          error:
+            type: string
+            description: Human-readable payment requirement message.
+            example: Payment required
+          resource:
+            type: object
+            properties:
+              url:
+                type: string
+                description: Protected resource URL.
+                example: https://api.venice.ai/api/v1/chat/completions
+              description:
+                type: string
+                description: Human-readable resource description.
+                example: Venice API
+              mimeType:
+                type: string
+                description: Resource MIME type.
+                example: application/json
+            required:
+            - url
+            - description
+            - mimeType
+            additionalProperties: false
+          accepts:
+            type: array
+            items:
+              type: object
+              properties:
+                scheme:
+                  type: string
+                  enum:
+                  - exact
+                  description: x402 payment scheme.
+                  example: exact
+                network:
+                  type: string
+                  description: Payment network for this requirement.
+                  example: solana
+                asset:
+                  type: string
+                  description: USDC token address or mint for the selected network.
+                  example: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+                amount:
+                  type: string
+                  description: Required payment amount in base units (USDC has 6 decimals).
+                  example: '10000000'
+                payTo:
+                  type: string
+                  description: Receiver wallet address for the selected network.
+                  example: 8qUL23aSj7mDWdoLMXGHFvnVCT9wd7jXcysiekroADEL
+                maxTimeoutSeconds:
+                  type: number
+                  description: Maximum time allowed for payment settlement.
+                  example: 300
+                extra:
+                  type: object
+                  properties: {}
+                  description: Network-specific x402 metadata. Solana requirements include a feePayer.
+                  example:
+                    name: USD Coin
+                    version: '2'
+                    feePayer: BFK9TLC3edb13K6v4YyH3DwPb5DSUpkWvb7XnqCL9b4F
+              required:
+              - scheme
+              - network
+              - asset
+              - amount
+              - payTo
+              - maxTimeoutSeconds
+              - extra
+              additionalProperties: false
+            description: Protocol payment requirements. Clients should choose one entry, such as Base or Solana, and sign exactly that requirement.
+          extensions:
+            type: object
+            properties: {}
+            description: Protocol extensions. Inference 402 responses include `sign-in-with-x` with a SIWX challenge for wallet-credit authentication.
+          authOptions:
+            type: object
+            properties:
+              apiKey:
+                type: object
+                properties:
+                  header:
+                    type: string
+                    description: API key authentication header format.
+                    example: 'Authorization: Bearer YOUR_API_KEY'
+                  getKey:
+                    type: string
+                    description: Where to create or manage API keys.
+                    example: https://venice.ai/settings/api
+                  docs:
+                    type: string
+                    description: API key documentation URL.
+                    example: https://docs.venice.ai/api-reference
+                required:
+                - header
+                - getKey
+                - docs
+                additionalProperties: false
+              x402Wallet:
+                type: object
+                properties:
+                  header:
+                    type: string
+                    description: Header used for Sign-In-With-X wallet authentication.
+                    example: SIGN-IN-WITH-X
+                  legacyHeader:
+                    type: string
+                    description: Legacy Sign-In-With-X header accepted during migration.
+                    example: X-Sign-In-With-X
+                  topUp:
+                    type: string
+                    description: Endpoint used to discover and submit x402 top-up payments.
+                    example: POST /api/v1/x402/top-up
+                  docs:
+                    type: string
+                    description: x402 top-up API documentation URL.
+                    example: https://docs.venice.ai/api-reference/endpoint/x402/top-up
+                required:
+                - header
+                - legacyHeader
+                - topUp
+                - docs
+                additionalProperties: false
+            required:
+            - apiKey
+            - x402Wallet
+            additionalProperties: false
+        required:
+        - x402Version
+        - resource
+        - accepts
+        - authOptions
+        additionalProperties: false
+        description: Returned when an inference request has no API key or wallet authentication. The JSON body includes x402 discovery requirements and authentication options.
+      - type: object
+        properties:
+          error:
+            type: string
+            enum:
+            - Payment required
+            description: Error message indicating payment is required.
+          code:
+            type: string
+            enum:
+            - PAYMENT_REQUIRED
+            description: Machine-readable error code.
+          reason:
+            type: string
+            enum:
+            - insufficient_balance
+            description: Reason the x402-authenticated request could not proceed.
+          message:
+            type: string
+            description: Human-readable context about the payment requirement.
+            example: Insufficient x402 balance
+          currentBalanceUsd:
+            type: number
+            description: Current x402 credit balance for the wallet.
+            example: 0.01
+          minimumBalanceUsd:
+            type: number
+            description: Minimum x402 credit balance required before the request can run.
+            example: 0.1
+          description:
+            type: string
+            description: Protected resource description.
+            example: Venice API
+          suggestedTopUpUsd:
+            type: number
+            description: Suggested amount to top up in USD.
+            example: 10
+          minimumTopUpUsd:
+            type: number
+            description: Minimum allowed top-up amount in USD.
+            example: 5
+          supportedTokens:
+            type: array
+            items:
+              type: string
+            description: List of supported token symbols for payment.
+            example:
+            - USDC
+          supportedChains:
+            type: array
+            items:
+              type: string
+            description: List of supported top-up rails.
+            example:
+            - base
+            - solana
+          topUpInstructions:
+            type: object
+            properties:
+              step1:
+                type: string
+                description: 'First step: get payment requirements.'
+                example: POST /api/v1/x402/top-up with no payment header to get payment requirements
+              step2:
+                type: string
+                description: 'Second step: sign the payment.'
+                example: Choose a payment option from accepts and sign a USDC transfer authorization using the x402 SDK (createPaymentHeader)
+              step3:
+                type: string
+                description: 'Third step: submit the payment.'
+                example: POST /api/v1/x402/top-up with the signed PAYMENT-SIGNATURE header
+              receiverWallet:
+                type: string
+                description: Legacy Base receiver wallet address. Prefer the selected accepts entry from /x402/top-up for network-specific payTo values.
+                example: <RECEIVER_WALLET_ADDRESS>
+              tokenAddress:
+                type: string
+                description: Legacy Base USDC token address. Prefer the selected accepts entry from /x402/top-up for network-specific assets.
+                example: <USDC_TOKEN_ADDRESS>
+              tokenDecimals:
+                type: number
+                description: Token decimal places.
+                example: 6
+              network:
+                type: string
+                description: Legacy Base target network. Prefer the selected accepts entry from /x402/top-up for network-specific values.
+                example: eip155:8453
+              minimumAmountUsd:
+                type: number
+                description: Minimum top-up amount in USD.
+                example: 5
+            required:
+            - step1
+            - step2
+            - step3
+            - receiverWallet
+            - tokenAddress
+            - tokenDecimals
+            - network
+            - minimumAmountUsd
+            additionalProperties: false
+          siwxChallenge:
+            type: object
+            properties:
+              info:
+                type: object
+                properties:
+                  domain:
+                    type: string
+                    description: Domain for the SIWX challenge.
+                    example: api.venice.ai
+                  uri:
+                    type: string
+                    description: Resource URI for the challenge.
+                    example: https://api.venice.ai/api/v1/chat/completions
+                  version:
+                    type: string
+                    description: SIWX version.
+                    example: '1'
+                  nonce:
+                    type: string
+                    description: Unique nonce for replay protection.
+                    example: '{{nonce}}'
+                  issuedAt:
+                    type: string
+                    description: ISO timestamp when the challenge was issued.
+                    example: 2026-04-09 12:00:00+00:00
+                  expirationTime:
+                    type: string
+                    description: ISO timestamp when the challenge expires.
+                    example: 2026-04-09 12:05:00+00:00
+                  statement:
+                    type: string
+                    description: Human-readable statement for the signature.
+                    example: Sign in to Venice AI
+                required:
+                - domain
+                - uri
+                - version
+                - nonce
+                - issuedAt
+                - expirationTime
+                - statement
+                additionalProperties: false
+              supportedChains:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    chainId:
+                      type: string
+                      description: Supported chain identity.
+                      example: solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp
+                    type:
+                      type: string
+                      enum:
+                      - eip191
+                      - eip1271
+                      - ed25519
+                      description: Signature type accepted for this chain.
+                      example: ed25519
+                  required:
+                  - chainId
+                  - type
+                  additionalProperties: false
+                description: Supported SIWX chains and signature types.
+            required:
+            - info
+            - supportedChains
+            additionalProperties: false
+        required:
+        - error
+        - code
+        - reason
+        - suggestedTopUpUsd
+        - minimumTopUpUsd
+        - supportedTokens
+        - supportedChains
+        - topUpInstructions
+        - siwxChallenge
+        additionalProperties: false
+    MultiEditImageRequest:
+      type: object
+      properties:
+        anon_user_id:
+          type: string
+          minLength: 1
+          maxLength: 128
+          pattern: ^[\x20-\x7E]+$
+          description: Optional identifier for the API customer's end user. Combined with the Venice user id when attributing the request to upstream providers. Distinct from the discarded OpenAI `user` field. Must be printable ASCII and must not contain `||`.
+          example: end-user-123
+        aspect_ratio:
+          type: string
+          enum:
+          - auto
+          - 61
+          - 182
+          - 969
+          - 1269
+          - 556
+          - 123
+          - 184
+          - 243
+          - 245
+          description: The aspect ratio for the output image. Use 'auto' or omit this parameter to infer the closest supported aspect ratio from the first input image when explicit sizing is required by the model.
+          example: 969
+        modelId:
+          type: string
+          minLength: 1
+          default: firered-image-edit
+          description: The model ID to use for multi-edit.
+        output_format:
+          type: string
+          enum:
+          - jpeg
+          - png
+          - webp
+          description: 'Output format for the edited image. Accepts jpeg, jpg, png, or webp. When omitted, the format is inferred from resolution: PNG for 1K edits and JPEG for 2K/4K edits.'
+          example: png
+        prompt:
+          type: string
+          minLength: 1
+          maxLength: 32768
+          description: The text directions to edit or modify the image. Short, descriptive prompts work best (e.g., "remove the tree", "change the sky to sunrise"). Character limit is model specific and is listed in the promptCharacterLimit setting in the model list endpoint.
+        images:
+          type: array
+          items:
+            anyOf:
+            - type: string
+              format: uri
+            - type: string
+            description: Image as a base64-encoded string or a URL starting with http:// or https://
+          minItems: 1
+          description: Images used for multi-editing (minimum 1). The maximum is model-specific — see `capabilities.maxInputImages` from GET /api/v1/models. The first image is treated as the base image, and the remaining images are used as edit layers/masks. Each image can be a base64-encoded string or a URL starting with http:// or https://. Image dimensions must be at least 65536 pixels and must not exceed 33177600 pixels. File size must be less than 25MB.
+        quality:
+          type: string
+          enum:
+          - low
+          - medium
+          - high
+          description: Output quality for supported models (e.g. GPT Image 2 / GPT Image 2 Edit). Higher values can increase the final request charge. See the model list for supported options.
+          example: high
+        resolution:
+          type: string
+          minLength: 1
+          maxLength: 10
+          description: Resolution tier for the output image (e.g. "1K", "2K", "4K"). Supported values vary by model - check GET /api/v1/models for model-specific options. Defaults to "1K" when not specified.
+          example: 1K
+        safe_mode:
+          type: boolean
+          default: true
+          description: Whether to blur images classified as adult content. Defaults to true. Set to false to receive unblurred output. No Pro subscription is required, and the mature filter setting in the Venice app does not affect this. The x-venice-is-blurred response header reports whether the returned image was blurred.
+          example: false
+        disable_prompt_optimization_thinking:
+          type: boolean
+          description: Skip the model's prompt-optimization thinking step for faster generation. Only supported by models with `supportsOptimizePromptThinking`; ignored by others. Omit to use the model default.
+          example: false
+        enhance_prompt:
+          type: boolean
+          description: Rewrite the edit prompt using the input images before editing to add clarifying detail. Additional credits are charged when a rewrite is generated. Adds up to ~30 seconds. When enhancement is applied, the final prompt is returned URL-encoded in the `x-venice-enhanced-prompt` response header. Defaults to false.
+          example: false
+      required:
+      - prompt
+      - images
+      additionalProperties: false
+      description: Edit an image by compositing multiple layered input images (up to the per-model maximum) with a single prompt. Supports base64-encoded strings and URLs.
+    ApiKeyIpRestrictedError:
+      type: object
+      properties:
+        error:
+          type: string
+          enum:
+          - This API key is restricted to configured IP addresses, and this request's source IP is not allowed
+          description: A description of the error
+          example: This API key is restricted to configured IP addresses, and this request's source IP is not allowed
+      required:
+      - error
+    StandardError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: A description of the error
+      required:
+      - error
+  responses:
+    ApiKeyIpRestrictedError:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiKeyIpRestrictedError'
+      description: This API key is restricted to configured IP addresses, and this request's source IP is not allowed
+  securitySchemes:
+    BearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
+    siwx:
+      description: 'Wallet-based authentication using the x402 protocol (Sign-In-With-X). Supports EVM SIWE signatures on Base and Ed25519 signatures on Solana mainnet.
+
+
+        **Header format:** Base64-encoded JSON object with the following fields:
+
+        - `address` — EVM or Solana wallet address
+
+        - `message` — Signed SIWX message. EVM wallets use EIP-4361 SIWE; Solana wallets use the Solana SIWX message format.
+
+        - `signature` — Signature of the message, signed by the wallet''s private key. EVM signatures are hex; Solana signatures may be base58 or base64.
+
+        - `timestamp` — Unix timestamp in milliseconds
+
+        - `chainId` — Chain identity. Use `8453`, `"8453"`, or `"eip155:8453"` for Base; use `"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"` for Solana.
+
+        - `type` — Optional signature type. Use `"ed25519"` for Solana. Omitted means EVM/EIP-191 for backward compatibility.
+
+
+        **EVM SIWE message fields:**
+
+        - `domain`: `api.venice.ai`
+
+        - `uri`: `https://api.venice.ai`
+
+        - `version`: `"1"`
+
+        - `chainId`: `8453`
+
+        - `nonce`: Random 16-character hex string
+
+        - `issuedAt` / `expirationTime`: ISO timestamps (recommended TTL: 10 minutes)
+
+        - `statement`: `"Sign in to Venice API"`
+
+
+        **Example (TypeScript):**
+
+        ```
+
+        import { Wallet } from ''ethers''
+
+        import { SiweMessage } from ''siwe''
+
+
+        const wallet = new Wallet(PRIVATE_KEY)
+
+        const msg = new SiweMessage({ domain: ''api.venice.ai'', address: wallet.address, statement: ''Sign in to Venice API'', uri: ''https://api.venice.ai'', version: ''1'', chainId: 8453, nonce: crypto.randomUUID().replace(/-/g, '''').slice(0, 16), issuedAt: new Date().toISOString(), expirationTime: new Date(Date.now() + 600000).toISOString() })
+
+        const signature = await wallet.signMessage(msg.prepareMessage())
+
+        const header = btoa(JSON.stringify({ address: wallet.address, message: msg.prepareMessage(), signature, timestamp: Date.now(), chainId: 8453 }))
+
+        // Set header: SIGN-IN-WITH-X: <header>
+
+        ```
+
+
+        **Solana message fields:** The signed message starts with `<domain> wants you to sign in with your Solana account:`, followed by the wallet address and the standard `URI`, `Version`, `Chain ID`, `Nonce`, `Issued At`, and optional `Expiration Time` fields. Use `type: "ed25519"` and `chainId: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"` in the encoded JSON payload.
+
+
+        **SDK:** `npm install @venice-ai/x402-client` provides `VeniceClient` and `createAuthFetch` which handle this automatically.
+
+
+        **Billing:** x402 users pay from a prepaid USDC credit balance. Top up via `POST /x402/top-up`. When balance is insufficient, endpoints return `402` with structured top-up instructions.'
+      in: header
+      name: SIGN-IN-WITH-X
+      type: apiKey
+externalDocs:
+  description: Venice.ai API documentation
+  url: https://docs.venice.ai
+x-refined-from:
+- venice-ai-swagger.yaml
+- venice-ai-openapi.yml

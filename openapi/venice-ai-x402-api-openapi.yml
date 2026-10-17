@@ -1,0 +1,626 @@
+openapi: 3.2.0
+info:
+  title: Venice Ai X402 API
+  version: '20261012.214344'
+  termsOfService: https://venice.ai/legal/tos
+  x-guidance: 'Venice.ai is an OpenAI-compatible inference API supporting text, image, audio, and video generation.
+
+
+    **Authentication options:**
+
+    - API Key: Use Bearer token in Authorization header
+
+    - x402 Wallet: Use USDC credits via EVM or Solana wallet (no account required)
+
+
+    **For x402 wallet access:**
+
+    1. POST /x402/top-up without headers to get payment requirements
+
+    2. Choose one of the returned Base or Solana payment options and sign a USDC payment using the x402 SDK
+
+    3. POST /x402/top-up with PAYMENT-SIGNATURE header to add credits
+
+    4. Call any inference endpoint with SIGN-IN-WITH-X header
+
+
+    **Pricing:** Prepaid credits consumed per request. Check /models for available models and their capabilities.'
+  description: 'Operations tagged x402 across 2 of this provider''s published API definitions: venice-ai-swagger.yaml, venice-ai-openapi.yml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: https://api.venice.ai/api/v1
+security:
+- BearerAuth: []
+tags:
+- description: Wallet-based API access using the x402 protocol.
+  name: X402
+paths:
+  /x402/balance/{walletAddress}:
+    get:
+      description: Get the x402 credit balance for a wallet address. Requires Sign-in-with-x authentication for the same EVM or Solana wallet.
+      operationId: getX402Balance
+      parameters:
+      - description: base64-encoded JSON SIWX payload proving EVM or Solana wallet ownership. The legacy `X-Sign-In-With-X` header is also accepted during migration.
+        in: header
+        name: SIGN-IN-WITH-X
+        required: true
+        schema:
+          example: siwx_example_token
+          type: string
+      - schema:
+          type: string
+          pattern: ^(0x[a-fA-F0-9]{40}|[1-9A-HJ-NP-Za-km-z]{32,44})$
+          description: EVM or Solana wallet address.
+          example: 0xYOUR_WALLET_ADDRESS
+        required: true
+        name: walletAddress
+        in: path
+      security:
+      - siwx: []
+      summary: /api/v1/x402/balance/{walletAddress}
+      tags:
+      - X402
+      responses:
+        '200':
+          description: Current x402 balance for the wallet.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                    - true
+                  data:
+                    type: object
+                    properties:
+                      walletAddress:
+                        type: string
+                        description: Normalized wallet address.
+                        example: 0xyour_wallet_address
+                      balanceUsd:
+                        type: number
+                        description: Current x402 credit balance in USD.
+                        example: 12.5
+                      canConsume:
+                        type: boolean
+                        description: Whether the wallet can currently consume paid x402-backed endpoints.
+                        example: true
+                      minimumTopUpUsd:
+                        type: number
+                        description: Minimum allowed top-up amount in USD.
+                        example: 5
+                      suggestedTopUpUsd:
+                        type: number
+                        description: Suggested top-up amount in USD.
+                        example: 10
+                      diemBalanceUsd:
+                        type: number
+                        description: Optional DIEM balance available for a linked Venice user.
+                        example: 5.25
+                    required:
+                    - walletAddress
+                    - balanceUsd
+                    - canConsume
+                    - minimumTopUpUsd
+                    - suggestedTopUpUsd
+                    additionalProperties: false
+                required:
+                - success
+                - data
+                additionalProperties: false
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedError'
+        '401':
+          description: Missing or invalid Sign-in-with-x authentication.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '403':
+          description: Authenticated wallet does not match the requested wallet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '500':
+          description: An unknown error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+    servers:
+    - url: https://api.venice.ai/api/v1
+  /x402/top-up:
+    post:
+      description: 'Top up your Venice credit balance using a `PAYMENT-SIGNATURE` header (the legacy `X-402-Payment` and `X-PAYMENT` header names are also accepted). If the header is missing, the endpoint returns payment requirements.
+
+
+        This is the primary x402 payment endpoint. It currently returns Base and Solana USDC payment options in the `accepts` array. All inference endpoints (chat, image, audio, video) consume from the credit balance you establish here.'
+      operationId: topUpX402Balance
+      parameters:
+      - description: Signed x402 v2 payment payload (base64-encoded `PaymentPayload`) used to top up the wallet balance on a supported rail such as Base or Solana. The canonical header is `PAYMENT-SIGNATURE`; the `X-402-Payment` and `X-PAYMENT` names are also accepted for backwards compatibility. If no payment header is present, the endpoint returns the 402 payment requirements.
+        in: header
+        name: PAYMENT-SIGNATURE
+        required: false
+        schema:
+          example: eyJ4NDAyVmVyc2lvbiI6MiwicGF5bG9hZCI6Ii4uLiJ9
+          type: string
+      security: []
+      x-payment-info:
+        price:
+          mode: dynamic
+          currency: USD
+          min: '5'
+          max: '10000'
+        protocols:
+        - x402: {}
+      summary: /api/v1/x402/top-up
+      tags:
+      - X402
+      requestBody:
+        description: No JSON body required. Payment is sent via the X-402-Payment header. Send an empty POST to discover payment requirements.
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      responses:
+        '200':
+          description: Top-up completed successfully.
+          headers:
+            PAYMENT-RESPONSE:
+              description: Base64-encoded x402 v2 settlement result (`{ success, network, payer, transaction }`).
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                    - true
+                  data:
+                    type: object
+                    properties:
+                      walletAddress:
+                        type: string
+                        description: Wallet that received the credited balance.
+                        example: 0xyour_wallet_address
+                      amountCredited:
+                        type: number
+                        description: Amount credited to the wallet in USD.
+                        example: 10
+                      newBalance:
+                        type: number
+                        description: Updated wallet balance in USD after the top-up.
+                        example: 22.5
+                      paymentId:
+                        type: string
+                        description: Unique identifier for the x402 payment.
+                        example: payment_01HZY8M4W4Y6QZ8B6Q4P0V3J2K
+                    required:
+                    - walletAddress
+                    - amountCredited
+                    - newBalance
+                    - paymentId
+                    additionalProperties: false
+                required:
+                - success
+                - data
+                additionalProperties: false
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Machine-readable x402 error code.
+                    example: X402_INVALID_PAYMENT
+                  message:
+                    type: string
+                    description: Human-readable description of the x402 failure.
+                    example: Invalid payment header
+                  details:
+                    type: object
+                    properties: {}
+                    description: Optional structured details about the x402 error.
+                    example:
+                      reason: signature_mismatch
+                required:
+                - error
+                - message
+                additionalProperties: false
+        '402':
+          description: Payment information required before the top-up can be processed.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  x402Version:
+                    type: number
+                    description: x402 protocol version.
+                    example: 2
+                  accepts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        scheme:
+                          type: string
+                          enum:
+                          - exact
+                          description: x402 payment scheme.
+                          example: exact
+                        network:
+                          type: string
+                          description: Payment network in CAIP-2 form (e.g. `eip155:8453` for Base, `solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp` for Solana mainnet).
+                          example: solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp
+                        amount:
+                          type: string
+                          description: Minimum payment amount in base units (USDC has 6 decimals).
+                          example: '5000000'
+                        asset:
+                          type: string
+                          description: USDC token address or mint for the selected network.
+                          example: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+                        payTo:
+                          type: string
+                          description: Receiver wallet address.
+                          example: 8qUL23aSj7mDWdoLMXGHFvnVCT9wd7jXcysiekroADEL
+                        maxTimeoutSeconds:
+                          type: number
+                          description: Maximum time allowed for payment settlement, in seconds.
+                          example: 300
+                        extra:
+                          type: object
+                          properties: {}
+                          description: Network-specific x402 metadata. Solana accepts include a feePayer.
+                          example:
+                            name: USD Coin
+                            version: '2'
+                            feePayer: BFK9TLC3edb13K6v4YyH3DwPb5DSUpkWvb7XnqCL9b4F
+                      required:
+                      - scheme
+                      - network
+                      - amount
+                      - asset
+                      - payTo
+                      - maxTimeoutSeconds
+                      additionalProperties: false
+                    description: Array of accepted payment options.
+                required:
+                - x402Version
+                - accepts
+                additionalProperties: false
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '500':
+          description: An unknown error occurred
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Machine-readable x402 error code.
+                    example: X402_INVALID_PAYMENT
+                  message:
+                    type: string
+                    description: Human-readable description of the x402 failure.
+                    example: Invalid payment header
+                  details:
+                    type: object
+                    properties: {}
+                    description: Optional structured details about the x402 error.
+                    example:
+                      reason: signature_mismatch
+                required:
+                - error
+                - message
+                additionalProperties: false
+    servers:
+    - url: https://api.venice.ai/api/v1
+  /x402/transactions/{walletAddress}:
+    get:
+      description: Get paginated x402 transaction history for a wallet address. Requires Sign-in-with-x authentication for the same EVM or Solana wallet.
+      operationId: getX402Transactions
+      parameters:
+      - description: base64-encoded JSON SIWX payload proving EVM or Solana wallet ownership. The legacy `X-Sign-In-With-X` header is also accepted during migration.
+        in: header
+        name: SIGN-IN-WITH-X
+        required: true
+        schema:
+          example: siwx_example_token
+          type: string
+      - schema:
+          type: string
+          pattern: ^(0x[a-fA-F0-9]{40}|[1-9A-HJ-NP-Za-km-z]{32,44})$
+          description: EVM or Solana wallet address.
+          example: 0xYOUR_WALLET_ADDRESS
+        required: true
+        name: walletAddress
+        in: path
+      - schema:
+          type: integer
+          minimum: 1
+          maximum: 100
+          default: 50
+          description: Maximum number of transactions to return.
+          example: 50
+        required: false
+        name: limit
+        in: query
+      - schema:
+          type:
+          - integer
+          - 'null'
+          minimum: 0
+          default: 0
+          description: Number of transactions to skip before returning results.
+          example: 0
+        required: false
+        name: offset
+        in: query
+      security:
+      - siwx: []
+      summary: /api/v1/x402/transactions/{walletAddress}
+      tags:
+      - X402
+      responses:
+        '200':
+          description: x402 transaction history for the wallet.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    enum:
+                    - true
+                  data:
+                    type: object
+                    properties:
+                      walletAddress:
+                        type: string
+                        description: Normalized wallet address.
+                        example: 0xyour_wallet_address
+                      currentBalance:
+                        type: number
+                        description: Current wallet balance in USD.
+                        example: 12.35
+                      transactions:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              description: Ledger entry identifier.
+                              example: ledger_01HZY8M4W4Y6QZ8B6Q4P0V3J2K
+                            amount:
+                              type: number
+                              description: Signed USD amount for the transaction.
+                              example: -0.15
+                            balanceAfter:
+                              type: number
+                              description: Wallet balance in USD after the transaction was applied.
+                              example: 12.35
+                            type:
+                              type: string
+                              description: Transaction type such as TOP_UP, CHARGE, or REFUND.
+                              example: TOP_UP
+                            createdAt:
+                              type: string
+                              description: ISO timestamp when the transaction was created.
+                              example: 2026-04-03 12:34:56+00:00
+                            requestId:
+                              type:
+                              - string
+                              - 'null'
+                              description: Associated request identifier when the transaction came from usage.
+                            modelId:
+                              type:
+                              - string
+                              - 'null'
+                              description: Associated model identifier when the transaction came from usage.
+                          required:
+                          - id
+                          - amount
+                          - balanceAfter
+                          - type
+                          - createdAt
+                          - requestId
+                          - modelId
+                          additionalProperties: false
+                      pagination:
+                        type: object
+                        properties:
+                          limit:
+                            type: number
+                            description: Maximum number of transactions returned.
+                            example: 50
+                          offset:
+                            type: number
+                            description: Number of transactions skipped.
+                            example: 0
+                          hasMore:
+                            type: boolean
+                            description: Whether more results are available after this page.
+                            example: false
+                        required:
+                        - limit
+                        - offset
+                        - hasMore
+                        additionalProperties: false
+                    required:
+                    - walletAddress
+                    - currentBalance
+                    - transactions
+                    - pagination
+                    additionalProperties: false
+                required:
+                - success
+                - data
+                additionalProperties: false
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedError'
+        '401':
+          description: Missing or invalid Sign-in-with-x authentication.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '403':
+          description: Authenticated wallet does not match the requested wallet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '500':
+          description: An unknown error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+    servers:
+    - url: https://api.venice.ai/api/v1
+components:
+  schemas:
+    DetailedError:
+      type: object
+      properties:
+        details:
+          type: object
+          properties: {}
+          description: Details about the incorrect input
+          example:
+            _errors: []
+            field:
+              _errors:
+              - Field is required
+        error:
+          type: string
+          description: A description of the error
+      required:
+      - error
+    StandardError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: A description of the error
+      required:
+      - error
+  securitySchemes:
+    BearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
+    siwx:
+      description: 'Wallet-based authentication using the x402 protocol (Sign-In-With-X). Supports EVM SIWE signatures on Base and Ed25519 signatures on Solana mainnet.
+
+
+        **Header format:** Base64-encoded JSON object with the following fields:
+
+        - `address` — EVM or Solana wallet address
+
+        - `message` — Signed SIWX message. EVM wallets use EIP-4361 SIWE; Solana wallets use the Solana SIWX message format.
+
+        - `signature` — Signature of the message, signed by the wallet''s private key. EVM signatures are hex; Solana signatures may be base58 or base64.
+
+        - `timestamp` — Unix timestamp in milliseconds
+
+        - `chainId` — Chain identity. Use `8453`, `"8453"`, or `"eip155:8453"` for Base; use `"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"` for Solana.
+
+        - `type` — Optional signature type. Use `"ed25519"` for Solana. Omitted means EVM/EIP-191 for backward compatibility.
+
+
+        **EVM SIWE message fields:**
+
+        - `domain`: `api.venice.ai`
+
+        - `uri`: `https://api.venice.ai`
+
+        - `version`: `"1"`
+
+        - `chainId`: `8453`
+
+        - `nonce`: Random 16-character hex string
+
+        - `issuedAt` / `expirationTime`: ISO timestamps (recommended TTL: 10 minutes)
+
+        - `statement`: `"Sign in to Venice API"`
+
+
+        **Example (TypeScript):**
+
+        ```
+
+        import { Wallet } from ''ethers''
+
+        import { SiweMessage } from ''siwe''
+
+
+        const wallet = new Wallet(PRIVATE_KEY)
+
+        const msg = new SiweMessage({ domain: ''api.venice.ai'', address: wallet.address, statement: ''Sign in to Venice API'', uri: ''https://api.venice.ai'', version: ''1'', chainId: 8453, nonce: crypto.randomUUID().replace(/-/g, '''').slice(0, 16), issuedAt: new Date().toISOString(), expirationTime: new Date(Date.now() + 600000).toISOString() })
+
+        const signature = await wallet.signMessage(msg.prepareMessage())
+
+        const header = btoa(JSON.stringify({ address: wallet.address, message: msg.prepareMessage(), signature, timestamp: Date.now(), chainId: 8453 }))
+
+        // Set header: SIGN-IN-WITH-X: <header>
+
+        ```
+
+
+        **Solana message fields:** The signed message starts with `<domain> wants you to sign in with your Solana account:`, followed by the wallet address and the standard `URI`, `Version`, `Chain ID`, `Nonce`, `Issued At`, and optional `Expiration Time` fields. Use `type: "ed25519"` and `chainId: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"` in the encoded JSON payload.
+
+
+        **SDK:** `npm install @venice-ai/x402-client` provides `VeniceClient` and `createAuthFetch` which handle this automatically.
+
+
+        **Billing:** x402 users pay from a prepaid USDC credit balance. Top up via `POST /x402/top-up`. When balance is insufficient, endpoints return `402` with structured top-up instructions.'
+      in: header
+      name: SIGN-IN-WITH-X
+      type: apiKey
+externalDocs:
+  description: Venice.ai API documentation
+  url: https://docs.venice.ai
+x-refined-from:
+- venice-ai-swagger.yaml
+- venice-ai-openapi.yml

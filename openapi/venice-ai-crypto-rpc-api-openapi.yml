@@ -1,0 +1,858 @@
+openapi: 3.2.0
+info:
+  title: Venice Ai Crypto RPC API
+  version: '20261012.214344'
+  termsOfService: https://venice.ai/legal/tos
+  x-guidance: 'Venice.ai is an OpenAI-compatible inference API supporting text, image, audio, and video generation.
+
+
+    **Authentication options:**
+
+    - API Key: Use Bearer token in Authorization header
+
+    - x402 Wallet: Use USDC credits via EVM or Solana wallet (no account required)
+
+
+    **For x402 wallet access:**
+
+    1. POST /x402/top-up without headers to get payment requirements
+
+    2. Choose one of the returned Base or Solana payment options and sign a USDC payment using the x402 SDK
+
+    3. POST /x402/top-up with PAYMENT-SIGNATURE header to add credits
+
+    4. Call any inference endpoint with SIGN-IN-WITH-X header
+
+
+    **Pricing:** Prepaid credits consumed per request. Check /models for available models and their capabilities.'
+  description: 'Operations tagged Crypto RPC across 2 of this provider''s published API definitions: venice-ai-swagger.yaml, venice-ai-openapi.yml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: https://api.venice.ai/api/v1
+security:
+- BearerAuth: []
+tags:
+- description: Proxy JSON-RPC requests to blockchain nodes. Billed per credit.
+  name: Crypto RPC
+paths:
+  /crypto/rpc/networks:
+    get:
+      description: 'Returns the alphabetically sorted list of network slugs supported by the Venice crypto RPC proxy.
+
+
+        This endpoint is **public** — no authentication required. Use it to discover which `:network` values are valid for `POST /api/v1/crypto/rpc/{network}`.'
+      operationId: listCryptoRpcNetworks
+      security:
+      - {}
+      summary: List supported crypto RPC networks
+      tags:
+      - Crypto RPC
+      responses:
+        '200':
+          description: The list of supported network slugs.
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                - networks
+                properties:
+                  networks:
+                    type: array
+                    items:
+                      type: string
+                    description: Sorted Venice-side network slugs.
+                    example:
+                    - arbitrum-mainnet
+                    - arbitrum-sepolia
+                    - avalanche-fuji
+                    - avalanche-mainnet
+                    - base-mainnet
+                    - base-sepolia
+                    - bsc-mainnet
+                    - bsc-testnet
+                    - ethereum-holesky
+                    - ethereum-mainnet
+                    - ethereum-sepolia
+                    - linea-mainnet
+                    - linea-sepolia
+                    - optimism-mainnet
+                    - optimism-sepolia
+                    - polygon-amoy
+                    - polygon-mainnet
+                    - robinhood-mainnet
+                    - robinhood-testnet
+                    - solana-devnet
+                    - solana-mainnet
+                    - starknet-mainnet
+                    - starknet-sepolia
+                    - zksync-mainnet
+                    - zksync-sepolia
+    servers:
+    - url: https://api.venice.ai/api/v1
+  /crypto/rpc/{network}:
+    post:
+      description: 'Proxy a JSON-RPC request to a supported blockchain node and bill per credit.
+
+
+        ## Request shapes
+
+        - **Single request**: a JSON-RPC 2.0 object (`{ "jsonrpc":"2.0", "method":"…", "params":[…], "id":1 }`).
+
+        - **Batch**: an array of up to 100 JSON-RPC 2.0 objects. If any item references an unsupported method, the entire batch is rejected with 400 and the offending methods are listed.
+
+
+        ## Supported methods
+
+        Methods are classified into three pricing tiers:
+
+        - **Standard (1×)**: `eth_call`, `eth_getBalance`, `eth_blockNumber`, `eth_sendRawTransaction`, `eth_getLogs`, `net_version`, `web3_clientVersion`, ERC-4337 bundler methods (`eth_sendUserOperation`, etc.), chain-family extensions (`zks_*`, `linea_*`, `bor_*`, `starknet_*`), and Solana methods (`getAccountInfo`, `getBalance`, `getLatestBlockhash`, `sendTransaction`, etc.).
+
+        - **Advanced (2×)**: `trace_*`, `debug_*`, `txpool_inspect`, `txpool_status`, `arbtrace_*`.
+
+        - **Large (4×)**: `trace_replayBlockTransactions`, `trace_replayTransaction`, `txpool_content`, `arbtrace_replay*`, and Solana `getLargestAccounts`, `getSupply`.
+
+
+        Stateful filter methods (`eth_newFilter`, `eth_getFilterChanges`, `eth_uninstallFilter`, etc.) are **not supported** — they break on a load-balanced HTTP proxy because filter state is pinned to a single upstream backend. Use `eth_getLogs` instead.
+
+
+        WebSocket-only methods (EVM `eth_subscribe`/`eth_unsubscribe` and Solana `*Subscribe`/`*Unsubscribe`) return 400 because this proxy is HTTP-only.
+
+
+        ## Pricing
+
+        Credits consumed per call = `baseCredits[chain] × methodTier`. `baseCredits` is 20 for most EVM chains (Ethereum, Base, Optimism, Arbitrum, Polygon, Linea, Avalanche, BSC, Blast) and Starknet; 30 for zkSync Era and Solana. The USD price per credit is `~7e-7` — a single standard EVM call costs ≈ $0.000014 and a large trace-replay costs ≈ $0.000056.
+
+
+        Per-request errors at the JSON-RPC layer (HTTP 200 with an `error` field in a response item) are billed at 5 credits instead of the full method tier — a small concession for methods not supported on a given chain or bad-parameter responses.
+
+
+        ## Rate limits
+
+        Two caps apply per caller:
+
+        - **Requests per minute**: 100 on the paid tier.
+
+        - **Credits per rolling 24 hours**: 10,000,000 on the paid tier.
+
+        When either cap is exceeded, the request returns 429 with a `customMessage` identifying which cap tripped. The per-minute cap also sets the `X-RateLimit-*` response headers.
+
+
+        ## Idempotency
+
+        Set the `Idempotency-Key` request header to any string matching `[A-Za-z0-9_-]{1,255}` to enable safe retries. The response is cached for 24 hours keyed on `(user, idempotency-key)`; replaying the same key with the same body returns the cached response with `Idempotent-Replayed: true`. Reusing the same key with a different body returns 400 to prevent silent corruption.
+
+
+        **Authentication:** This endpoint accepts either a Bearer API key or a `SIGN-IN-WITH-X` header for x402 wallet-based authentication. The legacy `X-Sign-In-With-X` header is also accepted during migration. When using x402, a `402 Payment Required` response indicates insufficient balance and includes top-up instructions.'
+      operationId: cryptoRpcProxy
+      parameters:
+      - description: Venice-side network slug. Call `GET /api/v1/crypto/rpc/networks` for the current list.
+        in: path
+        name: network
+        required: true
+        schema:
+          example: ethereum-mainnet
+          type: string
+      - description: 'Optional idempotency key for safe retries. Pattern: `[A-Za-z0-9_-]{1,255}`. Retrying within 24 hours with the same key + same body replays the cached response with `Idempotent-Replayed: true`. Same key + different body returns 400.'
+        in: header
+        name: Idempotency-Key
+        required: false
+        schema:
+          type: string
+          pattern: ^[A-Za-z0-9_-]{1,255}$
+          example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+      security:
+      - BearerAuth: []
+      - siwx: []
+      x-payment-info:
+        price:
+          mode: dynamic
+          currency: USD
+          min: '0.001'
+          max: '10.00'
+        protocols:
+        - x402: {}
+      summary: Proxy a JSON-RPC request to a supported blockchain
+      tags:
+      - Crypto RPC
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+              - type: object
+                required:
+                - method
+                properties:
+                  jsonrpc:
+                    type: string
+                    enum:
+                    - '2.0'
+                    example: '2.0'
+                  method:
+                    type: string
+                    description: JSON-RPC method name. See the "Supported methods" section of the endpoint description for the classification into 1×/2×/4× pricing tiers.
+                    example: eth_chainId
+                  params:
+                    type: array
+                    items: {}
+                    description: Method parameters. Shape depends on the method; see the upstream chain documentation.
+                    example: []
+                  id:
+                    description: Caller-supplied request ID echoed back in the response. Required for batch request correlation.
+                    oneOf:
+                    - type: integer
+                    - type: string
+                    example: 1
+              - type: array
+                maxItems: 100
+                items:
+                  type: object
+                  required:
+                  - method
+                  properties:
+                    jsonrpc:
+                      type: string
+                      enum:
+                      - '2.0'
+                      example: '2.0'
+                    method:
+                      type: string
+                      description: JSON-RPC method name. See the "Supported methods" section of the endpoint description for the classification into 1×/2×/4× pricing tiers.
+                      example: eth_chainId
+                    params:
+                      type: array
+                      items: {}
+                      description: Method parameters. Shape depends on the method; see the upstream chain documentation.
+                      example: []
+                    id:
+                      description: Caller-supplied request ID echoed back in the response. Required for batch request correlation.
+                      oneOf:
+                      - type: integer
+                      - type: string
+                      example: 1
+            examples:
+              singleRequest:
+                summary: Single JSON-RPC call
+                value:
+                  jsonrpc: '2.0'
+                  method: eth_chainId
+                  params: []
+                  id: 1
+              batchRequest:
+                summary: Batch of 2 calls
+                value:
+                - jsonrpc: '2.0'
+                  method: eth_chainId
+                  params: []
+                  id: 1
+                - jsonrpc: '2.0'
+                  method: eth_blockNumber
+                  params: []
+                  id: 2
+      responses:
+        '200':
+          description: JSON-RPC response forwarded from the upstream node. `Content-Type` is forced to `application/json` regardless of upstream headers.
+          headers:
+            X-Balance-Remaining:
+              description: Remaining x402 credit balance in USD after this request (only present for x402 auth).
+              required: false
+              schema:
+                type: string
+                example: '4.230000'
+            X-Venice-RPC-Credits:
+              description: Credits charged for this request. On batch requests this is the sum across items, with individual RPC-level errors billed at 5 credits instead of the full method tier.
+              schema:
+                type: integer
+                example: 20
+            X-Venice-RPC-Cost-USD:
+              description: Dollar cost charged to the caller for this request, to 8 decimal places. Equal to `X-Venice-RPC-Credits * CRYPTO_RPC_PRICE_PER_CREDIT_USD`.
+              schema:
+                type: string
+                example: '0.00001400'
+            X-Request-ID:
+              description: 32-character correlation ID generated by Venice for this request. Include this in any support correspondence.
+              schema:
+                type: string
+                example: aBCdEFghIjKlMnOpQrStUvWxYz012345
+            Idempotent-Replayed:
+              description: Present and set to `"true"` when the response is being served from the idempotency cache rather than freshly forwarded to the upstream.
+              schema:
+                type: string
+                enum:
+                - 'true'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - type: object
+                  properties:
+                    jsonrpc:
+                      type: string
+                      example: '2.0'
+                    id:
+                      oneOf:
+                      - type: integer
+                      - type: string
+                    result:
+                      description: Method-dependent result. Present on success.
+                    error:
+                      type: object
+                      description: JSON-RPC error object. Present on per-request failure (HTTP status is still 200 in that case).
+                      properties:
+                        code:
+                          type: integer
+                          example: -32602
+                        message:
+                          type: string
+                          example: invalid params
+                        data: {}
+                - type: array
+                  items:
+                    type: object
+                    properties:
+                      jsonrpc:
+                        type: string
+                        example: '2.0'
+                      id:
+                        oneOf:
+                        - type: integer
+                        - type: string
+                      result:
+                        description: Method-dependent result. Present on success.
+                      error:
+                        type: object
+                        description: JSON-RPC error object. Present on per-request failure (HTTP status is still 200 in that case).
+                        properties:
+                          code:
+                            type: integer
+                            example: -32602
+                          message:
+                            type: string
+                            example: invalid params
+                          data: {}
+              examples:
+                singleSuccess:
+                  summary: Single-call success
+                  value:
+                    jsonrpc: '2.0'
+                    id: 1
+                    result: '0x1'
+                batchMixed:
+                  summary: Batch with one RPC-level error
+                  value:
+                  - jsonrpc: '2.0'
+                    id: 1
+                    result: '0x1'
+                  - jsonrpc: '2.0'
+                    id: 2
+                    error:
+                      code: -32602
+                      message: invalid params
+        '400':
+          description: 'Invalid request. Examples: unsupported network, empty body, batch > 100, WebSocket-only method, unmapped method, cross-family EVM-on-Starknet call, or `Idempotency-Key` reuse with a different body.'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedError'
+        '401':
+          description: Missing or invalid API key or x402 wallet signature. The `/crypto/rpc/networks` listing is public, but this proxy endpoint requires authentication.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '402':
+          description: Insufficient balance. For API key users, top up at venice.ai. For x402 wallet users, the response includes structured top-up instructions and payment requirements per the x402 v2 spec.
+          headers:
+            PAYMENT-REQUIRED:
+              description: Base64-encoded JSON with x402 payment requirements. Present on x402 middleware 402 responses. Decode to choose and sign one accepted payment requirement programmatically.
+              required: false
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/StandardError'
+                - $ref: '#/components/schemas/X402InferencePaymentRequired'
+        '403':
+          $ref: '#/components/responses/ApiKeyIpRestrictedError'
+        '429':
+          description: Rate limit tripped. Either the per-minute request cap, the per-day credit cap, or a concurrent-call collision on the per-user mutex. The `customMessage` identifies which.
+          headers:
+            X-RateLimit-Limit:
+              description: 'Per-minute request cap for the caller''s tier (paid: 100). Set only when the rate limit is tripped.'
+              schema:
+                type: integer
+                example: 100
+            X-RateLimit-Remaining:
+              description: Requests remaining in the current 60-second window. Set only on rate-limit responses.
+              schema:
+                type: integer
+                example: 0
+            X-RateLimit-Reset:
+              description: Unix timestamp (seconds) when the current rate-limit window resets.
+              schema:
+                type: integer
+                example: 1704067260
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '500':
+          description: Either the upstream fetch failed (network error / timeout) or the service is misconfigured.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+    servers:
+    - url: https://api.venice.ai/api/v1
+components:
+  schemas:
+    X402InferencePaymentRequired:
+      anyOf:
+      - type: object
+        properties:
+          x402Version:
+            type: number
+            description: x402 protocol version.
+            example: 2
+          error:
+            type: string
+            description: Human-readable payment requirement message.
+            example: Payment required
+          resource:
+            type: object
+            properties:
+              url:
+                type: string
+                description: Protected resource URL.
+                example: https://api.venice.ai/api/v1/chat/completions
+              description:
+                type: string
+                description: Human-readable resource description.
+                example: Venice API
+              mimeType:
+                type: string
+                description: Resource MIME type.
+                example: application/json
+            required:
+            - url
+            - description
+            - mimeType
+            additionalProperties: false
+          accepts:
+            type: array
+            items:
+              type: object
+              properties:
+                scheme:
+                  type: string
+                  enum:
+                  - exact
+                  description: x402 payment scheme.
+                  example: exact
+                network:
+                  type: string
+                  description: Payment network for this requirement.
+                  example: solana
+                asset:
+                  type: string
+                  description: USDC token address or mint for the selected network.
+                  example: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+                amount:
+                  type: string
+                  description: Required payment amount in base units (USDC has 6 decimals).
+                  example: '10000000'
+                payTo:
+                  type: string
+                  description: Receiver wallet address for the selected network.
+                  example: 8qUL23aSj7mDWdoLMXGHFvnVCT9wd7jXcysiekroADEL
+                maxTimeoutSeconds:
+                  type: number
+                  description: Maximum time allowed for payment settlement.
+                  example: 300
+                extra:
+                  type: object
+                  properties: {}
+                  description: Network-specific x402 metadata. Solana requirements include a feePayer.
+                  example:
+                    name: USD Coin
+                    version: '2'
+                    feePayer: BFK9TLC3edb13K6v4YyH3DwPb5DSUpkWvb7XnqCL9b4F
+              required:
+              - scheme
+              - network
+              - asset
+              - amount
+              - payTo
+              - maxTimeoutSeconds
+              - extra
+              additionalProperties: false
+            description: Protocol payment requirements. Clients should choose one entry, such as Base or Solana, and sign exactly that requirement.
+          extensions:
+            type: object
+            properties: {}
+            description: Protocol extensions. Inference 402 responses include `sign-in-with-x` with a SIWX challenge for wallet-credit authentication.
+          authOptions:
+            type: object
+            properties:
+              apiKey:
+                type: object
+                properties:
+                  header:
+                    type: string
+                    description: API key authentication header format.
+                    example: 'Authorization: Bearer YOUR_API_KEY'
+                  getKey:
+                    type: string
+                    description: Where to create or manage API keys.
+                    example: https://venice.ai/settings/api
+                  docs:
+                    type: string
+                    description: API key documentation URL.
+                    example: https://docs.venice.ai/api-reference
+                required:
+                - header
+                - getKey
+                - docs
+                additionalProperties: false
+              x402Wallet:
+                type: object
+                properties:
+                  header:
+                    type: string
+                    description: Header used for Sign-In-With-X wallet authentication.
+                    example: SIGN-IN-WITH-X
+                  legacyHeader:
+                    type: string
+                    description: Legacy Sign-In-With-X header accepted during migration.
+                    example: X-Sign-In-With-X
+                  topUp:
+                    type: string
+                    description: Endpoint used to discover and submit x402 top-up payments.
+                    example: POST /api/v1/x402/top-up
+                  docs:
+                    type: string
+                    description: x402 top-up API documentation URL.
+                    example: https://docs.venice.ai/api-reference/endpoint/x402/top-up
+                required:
+                - header
+                - legacyHeader
+                - topUp
+                - docs
+                additionalProperties: false
+            required:
+            - apiKey
+            - x402Wallet
+            additionalProperties: false
+        required:
+        - x402Version
+        - resource
+        - accepts
+        - authOptions
+        additionalProperties: false
+        description: Returned when an inference request has no API key or wallet authentication. The JSON body includes x402 discovery requirements and authentication options.
+      - type: object
+        properties:
+          error:
+            type: string
+            enum:
+            - Payment required
+            description: Error message indicating payment is required.
+          code:
+            type: string
+            enum:
+            - PAYMENT_REQUIRED
+            description: Machine-readable error code.
+          reason:
+            type: string
+            enum:
+            - insufficient_balance
+            description: Reason the x402-authenticated request could not proceed.
+          message:
+            type: string
+            description: Human-readable context about the payment requirement.
+            example: Insufficient x402 balance
+          currentBalanceUsd:
+            type: number
+            description: Current x402 credit balance for the wallet.
+            example: 0.01
+          minimumBalanceUsd:
+            type: number
+            description: Minimum x402 credit balance required before the request can run.
+            example: 0.1
+          description:
+            type: string
+            description: Protected resource description.
+            example: Venice API
+          suggestedTopUpUsd:
+            type: number
+            description: Suggested amount to top up in USD.
+            example: 10
+          minimumTopUpUsd:
+            type: number
+            description: Minimum allowed top-up amount in USD.
+            example: 5
+          supportedTokens:
+            type: array
+            items:
+              type: string
+            description: List of supported token symbols for payment.
+            example:
+            - USDC
+          supportedChains:
+            type: array
+            items:
+              type: string
+            description: List of supported top-up rails.
+            example:
+            - base
+            - solana
+          topUpInstructions:
+            type: object
+            properties:
+              step1:
+                type: string
+                description: 'First step: get payment requirements.'
+                example: POST /api/v1/x402/top-up with no payment header to get payment requirements
+              step2:
+                type: string
+                description: 'Second step: sign the payment.'
+                example: Choose a payment option from accepts and sign a USDC transfer authorization using the x402 SDK (createPaymentHeader)
+              step3:
+                type: string
+                description: 'Third step: submit the payment.'
+                example: POST /api/v1/x402/top-up with the signed PAYMENT-SIGNATURE header
+              receiverWallet:
+                type: string
+                description: Legacy Base receiver wallet address. Prefer the selected accepts entry from /x402/top-up for network-specific payTo values.
+                example: <RECEIVER_WALLET_ADDRESS>
+              tokenAddress:
+                type: string
+                description: Legacy Base USDC token address. Prefer the selected accepts entry from /x402/top-up for network-specific assets.
+                example: <USDC_TOKEN_ADDRESS>
+              tokenDecimals:
+                type: number
+                description: Token decimal places.
+                example: 6
+              network:
+                type: string
+                description: Legacy Base target network. Prefer the selected accepts entry from /x402/top-up for network-specific values.
+                example: eip155:8453
+              minimumAmountUsd:
+                type: number
+                description: Minimum top-up amount in USD.
+                example: 5
+            required:
+            - step1
+            - step2
+            - step3
+            - receiverWallet
+            - tokenAddress
+            - tokenDecimals
+            - network
+            - minimumAmountUsd
+            additionalProperties: false
+          siwxChallenge:
+            type: object
+            properties:
+              info:
+                type: object
+                properties:
+                  domain:
+                    type: string
+                    description: Domain for the SIWX challenge.
+                    example: api.venice.ai
+                  uri:
+                    type: string
+                    description: Resource URI for the challenge.
+                    example: https://api.venice.ai/api/v1/chat/completions
+                  version:
+                    type: string
+                    description: SIWX version.
+                    example: '1'
+                  nonce:
+                    type: string
+                    description: Unique nonce for replay protection.
+                    example: '{{nonce}}'
+                  issuedAt:
+                    type: string
+                    description: ISO timestamp when the challenge was issued.
+                    example: 2026-04-09 12:00:00+00:00
+                  expirationTime:
+                    type: string
+                    description: ISO timestamp when the challenge expires.
+                    example: 2026-04-09 12:05:00+00:00
+                  statement:
+                    type: string
+                    description: Human-readable statement for the signature.
+                    example: Sign in to Venice AI
+                required:
+                - domain
+                - uri
+                - version
+                - nonce
+                - issuedAt
+                - expirationTime
+                - statement
+                additionalProperties: false
+              supportedChains:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    chainId:
+                      type: string
+                      description: Supported chain identity.
+                      example: solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp
+                    type:
+                      type: string
+                      enum:
+                      - eip191
+                      - eip1271
+                      - ed25519
+                      description: Signature type accepted for this chain.
+                      example: ed25519
+                  required:
+                  - chainId
+                  - type
+                  additionalProperties: false
+                description: Supported SIWX chains and signature types.
+            required:
+            - info
+            - supportedChains
+            additionalProperties: false
+        required:
+        - error
+        - code
+        - reason
+        - suggestedTopUpUsd
+        - minimumTopUpUsd
+        - supportedTokens
+        - supportedChains
+        - topUpInstructions
+        - siwxChallenge
+        additionalProperties: false
+    DetailedError:
+      type: object
+      properties:
+        details:
+          type: object
+          properties: {}
+          description: Details about the incorrect input
+          example:
+            _errors: []
+            field:
+              _errors:
+              - Field is required
+        error:
+          type: string
+          description: A description of the error
+      required:
+      - error
+    ApiKeyIpRestrictedError:
+      type: object
+      properties:
+        error:
+          type: string
+          enum:
+          - This API key is restricted to configured IP addresses, and this request's source IP is not allowed
+          description: A description of the error
+          example: This API key is restricted to configured IP addresses, and this request's source IP is not allowed
+      required:
+      - error
+    StandardError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: A description of the error
+      required:
+      - error
+  responses:
+    ApiKeyIpRestrictedError:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiKeyIpRestrictedError'
+      description: This API key is restricted to configured IP addresses, and this request's source IP is not allowed
+  securitySchemes:
+    BearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
+    siwx:
+      description: 'Wallet-based authentication using the x402 protocol (Sign-In-With-X). Supports EVM SIWE signatures on Base and Ed25519 signatures on Solana mainnet.
+
+
+        **Header format:** Base64-encoded JSON object with the following fields:
+
+        - `address` — EVM or Solana wallet address
+
+        - `message` — Signed SIWX message. EVM wallets use EIP-4361 SIWE; Solana wallets use the Solana SIWX message format.
+
+        - `signature` — Signature of the message, signed by the wallet''s private key. EVM signatures are hex; Solana signatures may be base58 or base64.
+
+        - `timestamp` — Unix timestamp in milliseconds
+
+        - `chainId` — Chain identity. Use `8453`, `"8453"`, or `"eip155:8453"` for Base; use `"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"` for Solana.
+
+        - `type` — Optional signature type. Use `"ed25519"` for Solana. Omitted means EVM/EIP-191 for backward compatibility.
+
+
+        **EVM SIWE message fields:**
+
+        - `domain`: `api.venice.ai`
+
+        - `uri`: `https://api.venice.ai`
+
+        - `version`: `"1"`
+
+        - `chainId`: `8453`
+
+        - `nonce`: Random 16-character hex string
+
+        - `issuedAt` / `expirationTime`: ISO timestamps (recommended TTL: 10 minutes)
+
+        - `statement`: `"Sign in to Venice API"`
+
+
+        **Example (TypeScript):**
+
+        ```
+
+        import { Wallet } from ''ethers''
+
+        import { SiweMessage } from ''siwe''
+
+
+        const wallet = new Wallet(PRIVATE_KEY)
+
+        const msg = new SiweMessage({ domain: ''api.venice.ai'', address: wallet.address, statement: ''Sign in to Venice API'', uri: ''https://api.venice.ai'', version: ''1'', chainId: 8453, nonce: crypto.randomUUID().replace(/-/g, '''').slice(0, 16), issuedAt: new Date().toISOString(), expirationTime: new Date(Date.now() + 600000).toISOString() })
+
+        const signature = await wallet.signMessage(msg.prepareMessage())
+
+        const header = btoa(JSON.stringify({ address: wallet.address, message: msg.prepareMessage(), signature, timestamp: Date.now(), chainId: 8453 }))
+
+        // Set header: SIGN-IN-WITH-X: <header>
+
+        ```
+
+
+        **Solana message fields:** The signed message starts with `<domain> wants you to sign in with your Solana account:`, followed by the wallet address and the standard `URI`, `Version`, `Chain ID`, `Nonce`, `Issued At`, and optional `Expiration Time` fields. Use `type: "ed25519"` and `chainId: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"` in the encoded JSON payload.
+
+
+        **SDK:** `npm install @venice-ai/x402-client` provides `VeniceClient` and `createAuthFetch` which handle this automatically.
+
+
+        **Billing:** x402 users pay from a prepaid USDC credit balance. Top up via `POST /x402/top-up`. When balance is insufficient, endpoints return `402` with structured top-up instructions.'
+      in: header
+      name: SIGN-IN-WITH-X
+      type: apiKey
+externalDocs:
+  description: Venice.ai API documentation
+  url: https://docs.venice.ai
+x-refined-from:
+- venice-ai-swagger.yaml
+- venice-ai-openapi.yml

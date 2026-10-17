@@ -109,21 +109,474 @@ common:
 - type: RateLimits
   url: https://docs.venice.ai/api-reference/rate-limiting
 apis:
-- aid: venice-ai:venice-ai-api
-  name: Venice.ai API
-  description: OpenAI-compatible REST API for chat, responses, images, audio, video, music, embeddings, characters, web augmentation, crypto RPC, billing and API key management.
+- aid: venice-ai:venice-ai-api-keys-api
+  name: Venice.ai API Keys API
+  description: The API Keys API from Venice.ai — 5 operation(s) for api keys.
   humanURL: https://docs.venice.ai/api-reference/api-spec
   baseURL: https://api.venice.ai/api/v1
   tags:
-  - AI
-  - LLM
-  - OpenAI Compatible
+  - API Keys
   properties:
   - type: OpenAPI
-    url: openapi/venice-ai-openapi.yml
+    url: openapi/venice-ai-api-keys-api-openapi.yml
+  - type: Documentation
+    url: https://docs.venice.ai/overview/about-venice
+  - type: JSONSchema
+    url: json-schema/venice-ai-model-response-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-chat-completion-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-responses-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-queue-video-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-generate-image-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-multi-edit-image-request-schema.json
+- aid: venice-ai:venice-ai-audio-api
+  name: Venice.ai Audio API
+  description: Generate speech/audio, transcribe audio, and manage asynchronous audio generation jobs.
+  humanURL: https://docs.venice.ai/api-reference/api-spec
+  baseURL: https://api.venice.ai/api/v1
+  tags:
+  - Audio
+  properties:
   - type: OpenAPI
-    name: OpenAPI (provider-hosted)
-    url: https://api.venice.ai/api/v1/swagger.yaml
+    url: openapi/venice-ai-audio-api-openapi.yml
+  - type: Documentation
+    url: https://docs.venice.ai/overview/about-venice
+  - type: JSONSchema
+    url: json-schema/venice-ai-model-response-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-chat-completion-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-responses-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-queue-video-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-generate-image-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-multi-edit-image-request-schema.json
+- aid: venice-ai:venice-ai-augment-api
+  name: Venice.ai Augment API
+  description: The Augment API from Venice.ai — 3 operation(s) for augment.
+  humanURL: https://docs.venice.ai/api-reference/api-spec
+  baseURL: https://api.venice.ai/api/v1
+  tags:
+  - Augment
+  properties:
+  - type: OpenAPI
+    url: openapi/venice-ai-augment-api-openapi.yml
+  - type: Documentation
+    url: https://docs.venice.ai/overview/about-venice
+  - type: JSONSchema
+    url: json-schema/venice-ai-model-response-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-chat-completion-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-responses-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-queue-video-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-generate-image-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-multi-edit-image-request-schema.json
+- aid: venice-ai:venice-ai-billing-api
+  name: Venice.ai Billing API
+  description: >-
+    Billing and usage analytics. **Beta**: This API is currently in beta and may be unstable. Endpoints,
+    request/response schemas, and behavior may change without notice.
+  humanURL: https://docs.venice.ai/api-reference/api-spec
+  baseURL: https://api.venice.ai/api/v1
+  tags:
+  - Billing
+  properties:
+  - type: OpenAPI
+    url: openapi/venice-ai-billing-api-openapi.yml
+  - type: Documentation
+    url: https://docs.venice.ai/overview/about-venice
+  - type: JSONSchema
+    url: json-schema/venice-ai-model-response-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-chat-completion-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-responses-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-queue-video-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-generate-image-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-multi-edit-image-request-schema.json
+- aid: venice-ai:venice-ai-characters-api
+  name: Venice.ai Characters API
+  description: List and retrieve character information for use in completions.
+  humanURL: https://docs.venice.ai/api-reference/api-spec
+  baseURL: https://api.venice.ai/api/v1
+  tags:
+  - Characters
+  properties:
+  - type: OpenAPI
+    url: openapi/venice-ai-characters-api-openapi.yml
+  - type: Documentation
+    url: https://docs.venice.ai/overview/about-venice
+  - type: JSONSchema
+    url: json-schema/venice-ai-model-response-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-chat-completion-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-responses-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-queue-video-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-generate-image-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-multi-edit-image-request-schema.json
+- aid: venice-ai:venice-ai-crypto-rpc-api
+  name: Venice.ai Crypto RPC API
+  description: Proxy JSON-RPC requests to blockchain nodes. Billed per credit.
+  humanURL: https://docs.venice.ai/api-reference/api-spec
+  baseURL: https://api.venice.ai/api/v1
+  tags:
+  - Crypto RPC
+  properties:
+  - type: OpenAPI
+    url: openapi/venice-ai-crypto-rpc-api-openapi.yml
+  - type: Documentation
+    url: https://docs.venice.ai/overview/about-venice
+  - type: JSONSchema
+    url: json-schema/venice-ai-model-response-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-chat-completion-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-responses-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-queue-video-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-generate-image-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-multi-edit-image-request-schema.json
+- aid: venice-ai:venice-ai-decisions-api
+  name: Venice.ai Decisions API
+  description: >-
+    Evaluate a state against typed questions and get structured answers (yes/no probabilities, option
+    picks with distributions, rubric scores). **Beta**: This API is currently in beta and may be unstable.
+    Request/response schemas and behavior may change without notice.
+  humanURL: https://docs.venice.ai/api-reference/api-spec
+  baseURL: https://api.venice.ai/api/v1
+  tags:
+  - Decisions
+  properties:
+  - type: OpenAPI
+    url: openapi/venice-ai-decisions-api-openapi.yml
+  - type: Documentation
+    url: https://docs.venice.ai/overview/about-venice
+  - type: JSONSchema
+    url: json-schema/venice-ai-model-response-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-chat-completion-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-responses-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-queue-video-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-generate-image-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-multi-edit-image-request-schema.json
+- aid: venice-ai:venice-ai-embeddings-api
+  name: Venice.ai Embeddings API
+  description: >-
+    Create vector embeddings from text. `input` must be a string or an array of strings. Token arrays
+    are not supported. LangChain OpenAIEmbeddings must set `check_embedding_ctx_length=False` to send
+    text instead of tiktoken IDs.
+  humanURL: https://docs.venice.ai/api-reference/api-spec
+  baseURL: https://api.venice.ai/api/v1
+  tags:
+  - Embeddings
+  properties:
+  - type: OpenAPI
+    url: openapi/venice-ai-embeddings-api-openapi.yml
+  - type: Documentation
+    url: https://docs.venice.ai/overview/about-venice
+  - type: JSONSchema
+    url: json-schema/venice-ai-model-response-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-chat-completion-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-responses-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-queue-video-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-generate-image-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-multi-edit-image-request-schema.json
+- aid: venice-ai:venice-ai-image-api
+  name: Venice.ai Image API
+  description: Generate and manipulate images using AI models.
+  humanURL: https://docs.venice.ai/api-reference/api-spec
+  baseURL: https://api.venice.ai/api/v1
+  tags:
+  - Image
+  properties:
+  - type: OpenAPI
+    url: openapi/venice-ai-image-api-openapi.yml
+  - type: Documentation
+    url: https://docs.venice.ai/overview/about-venice
+  - type: JSONSchema
+    url: json-schema/venice-ai-model-response-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-chat-completion-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-responses-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-queue-video-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-generate-image-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-multi-edit-image-request-schema.json
+- aid: venice-ai:venice-ai-models-api
+  name: Venice.ai Models API
+  description: List and describe the various models available in the API.
+  humanURL: https://docs.venice.ai/api-reference/api-spec
+  baseURL: https://api.venice.ai/api/v1
+  tags:
+  - Models
+  properties:
+  - type: OpenAPI
+    url: openapi/venice-ai-models-api-openapi.yml
+  - type: Documentation
+    url: https://docs.venice.ai/overview/about-venice
+  - type: JSONSchema
+    url: json-schema/venice-ai-model-response-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-chat-completion-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-responses-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-queue-video-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-generate-image-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-multi-edit-image-request-schema.json
+- aid: venice-ai:venice-ai-preview-api
+  name: Venice.ai Preview API
+  description: The Preview API from Venice.ai — 3 operation(s) for preview.
+  humanURL: https://docs.venice.ai/api-reference/api-spec
+  baseURL: https://api.venice.ai/api/v1
+  tags:
+  - Preview
+  properties:
+  - type: OpenAPI
+    url: openapi/venice-ai-preview-api-openapi.yml
+  - type: Documentation
+    url: https://docs.venice.ai/overview/about-venice
+  - type: JSONSchema
+    url: json-schema/venice-ai-model-response-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-chat-completion-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-responses-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-queue-video-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-generate-image-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-multi-edit-image-request-schema.json
+- aid: venice-ai:venice-ai-responses-api
+  name: Venice.ai Responses API
+  description: The Responses API from Venice.ai — 1 operation(s) for responses.
+  humanURL: https://docs.venice.ai/api-reference/api-spec
+  baseURL: https://api.venice.ai/api/v1
+  tags:
+  - Responses
+  properties:
+  - type: OpenAPI
+    url: openapi/venice-ai-responses-api-openapi.yml
+  - type: Documentation
+    url: https://docs.venice.ai/overview/about-venice
+  - type: JSONSchema
+    url: json-schema/venice-ai-model-response-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-chat-completion-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-responses-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-queue-video-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-generate-image-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-multi-edit-image-request-schema.json
+- aid: venice-ai:venice-ai-speech-api
+  name: Venice.ai Speech API
+  description: The Speech API from Venice.ai — 1 operation(s) for speech.
+  humanURL: https://docs.venice.ai/api-reference/api-spec
+  baseURL: https://api.venice.ai/api/v1
+  tags:
+  - Speech
+  properties:
+  - type: OpenAPI
+    url: openapi/venice-ai-speech-api-openapi.yml
+  - type: Documentation
+    url: https://docs.venice.ai/overview/about-venice
+  - type: JSONSchema
+    url: json-schema/venice-ai-model-response-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-chat-completion-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-responses-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-queue-video-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-generate-image-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-multi-edit-image-request-schema.json
+- aid: venice-ai:venice-ai-transcriptions-api
+  name: Venice.ai Transcriptions API
+  description: The Transcriptions API from Venice.ai — 1 operation(s) for transcriptions.
+  humanURL: https://docs.venice.ai/api-reference/api-spec
+  baseURL: https://api.venice.ai/api/v1
+  tags:
+  - Transcriptions
+  properties:
+  - type: OpenAPI
+    url: openapi/venice-ai-transcriptions-api-openapi.yml
+  - type: Documentation
+    url: https://docs.venice.ai/overview/about-venice
+  - type: JSONSchema
+    url: json-schema/venice-ai-model-response-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-chat-completion-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-responses-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-queue-video-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-generate-image-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-multi-edit-image-request-schema.json
+- aid: venice-ai:venice-ai-video-api
+  name: Venice.ai Video API
+  description: Generate videos using AI models.
+  humanURL: https://docs.venice.ai/api-reference/api-spec
+  baseURL: https://api.venice.ai/api/v1
+  tags:
+  - Video
+  properties:
+  - type: OpenAPI
+    url: openapi/venice-ai-video-api-openapi.yml
+  - type: Documentation
+    url: https://docs.venice.ai/overview/about-venice
+  - type: JSONSchema
+    url: json-schema/venice-ai-model-response-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-chat-completion-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-responses-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-queue-video-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-generate-image-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-multi-edit-image-request-schema.json
+- aid: venice-ai:venice-ai-voices-api
+  name: Venice.ai Voices API
+  description: The Voices API from Venice.ai — 1 operation(s) for voices.
+  humanURL: https://docs.venice.ai/api-reference/api-spec
+  baseURL: https://api.venice.ai/api/v1
+  tags:
+  - Voices
+  properties:
+  - type: OpenAPI
+    url: openapi/venice-ai-voices-api-openapi.yml
+  - type: Documentation
+    url: https://docs.venice.ai/overview/about-venice
+  - type: JSONSchema
+    url: json-schema/venice-ai-model-response-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-chat-completion-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-responses-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-queue-video-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-generate-image-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-multi-edit-image-request-schema.json
+- aid: venice-ai:venice-ai-x402-api
+  name: Venice.ai X402 API
+  description: >-
+    Wallet-based API access using the x402 protocol. No API key required — authenticate with an EVM or
+    Solana wallet.
+
+
+    **How it works:**
+
+    1. **Authenticate** — Send a `SIGN-IN-WITH-X` header (base64-encoded signed SIWX payload) with any
+    request. EVM wallets sign an EIP-4361 SIWE message; Solana wallets sign the Solana SIWX message with
+    Ed25519. See the `siwx` security scheme for the exact format.
+
+    2. **Top up** — `POST /x402/top-up` without a payment header returns an `accepts` array with Base
+    and Solana USDC payment options. Choose one entry, sign it using the x402 SDK (`npm install x402`),
+    and re-submit with the `PAYMENT-SIGNATURE` header (the legacy `X-402-Payment` and `X-PAYMENT` names
+    are also accepted).
+
+    3. **Use any endpoint** — All inference endpoints (chat, image, audio, video, embeddings) accept `siwx`
+    as an alternative to `BearerAuth`. Charges are deducted from your USDC credit balance.
+
+    4. **Monitor balance** — `GET /x402/balance/{walletAddress}` returns your current balance. The `X-Balance-Remaining`
+    response header on inference calls also reports it.
+
+
+    **Quick start (5 lines):**
+
+    ```
+
+    import { VeniceClient } from '@venice-ai/x402-client'
+
+    const venice = new VeniceClient(process.env.WALLET_KEY)
+
+    await venice.topUp(10) // $10 USDC on a supported x402 rail
+
+    const res = await venice.chat({ model: 'zai-org-glm-5-1', messages: [{ role: 'user', content: 'Hello!'
+    }] })
+
+    ```
+
+
+    **Payment:** USDC on Base (chain ID 8453) or Solana mainnet. Minimum top-up: $5. Alternatively, stake
+    DIEM tokens for daily credits (1 DIEM = $1/day).
+  humanURL: https://docs.venice.ai/api-reference/api-spec
+  baseURL: https://api.venice.ai/api/v1
+  tags:
+  - x402
+  properties:
+  - type: OpenAPI
+    url: openapi/venice-ai-x402-api-openapi.yml
+  - type: Documentation
+    url: https://docs.venice.ai/overview/about-venice
+  - type: JSONSchema
+    url: json-schema/venice-ai-model-response-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-chat-completion-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-responses-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-queue-video-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-generate-image-request-schema.json
+  - type: JSONSchema
+    url: json-schema/venice-ai-multi-edit-image-request-schema.json
+- aid: venice-ai:venice-ai-chat-completions-api
+  name: Venice.ai Chat Completions API
+  description: >-
+    Given a list of messages comprising a conversation, the model will return a response. Supports multimodal
+    inputs including text, images, audio (input_audio), and video (video_url) for compatible models.
+  humanURL: https://docs.venice.ai/api-reference/api-spec
+  baseURL: https://api.venice.ai/api/v1
+  tags:
+  - Chat Completions
+  properties:
+  - type: OpenAPI
+    url: openapi/venice-ai-chat-completions-api-openapi.yml
   - type: Documentation
     url: https://docs.venice.ai/overview/about-venice
   - type: JSONSchema

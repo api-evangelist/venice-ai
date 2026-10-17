@@ -1,0 +1,1593 @@
+openapi: 3.2.0
+info:
+  title: Venice Ai Video API
+  version: '20261012.214344'
+  termsOfService: https://venice.ai/legal/tos
+  x-guidance: 'Venice.ai is an OpenAI-compatible inference API supporting text, image, audio, and video generation.
+
+
+    **Authentication options:**
+
+    - API Key: Use Bearer token in Authorization header
+
+    - x402 Wallet: Use USDC credits via EVM or Solana wallet (no account required)
+
+
+    **For x402 wallet access:**
+
+    1. POST /x402/top-up without headers to get payment requirements
+
+    2. Choose one of the returned Base or Solana payment options and sign a USDC payment using the x402 SDK
+
+    3. POST /x402/top-up with PAYMENT-SIGNATURE header to add credits
+
+    4. Call any inference endpoint with SIGN-IN-WITH-X header
+
+
+    **Pricing:** Prepaid credits consumed per request. Check /models for available models and their capabilities.'
+  description: 'Operations tagged Video across 2 of this provider''s published API definitions: venice-ai-swagger.yaml, venice-ai-openapi.yml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: https://api.venice.ai/api/v1
+security:
+- BearerAuth: []
+tags:
+- description: Generate videos using AI models.
+  name: Video
+paths:
+  /video/complete:
+    post:
+      description: 'Delete a video generation request from storage after it has been successfully downloaded. Videos can be automatically deleted after retrieval by setting the `delete_media_on_completion` flag to true when calling the retrieve API.
+
+
+        **Authentication:** This endpoint accepts either a Bearer API key or a `SIGN-IN-WITH-X` header for x402 wallet-based authentication. The legacy `X-Sign-In-With-X` header is also accepted during migration. When using x402, a `402 Payment Required` response indicates insufficient balance and includes top-up instructions.'
+      operationId: completeVideo
+      security:
+      - BearerAuth: []
+      - siwx: []
+      x-payment-info:
+        price:
+          mode: dynamic
+          currency: USD
+          min: '0.001'
+          max: '10.00'
+        protocols:
+        - x402: {}
+      summary: /api/v1/video/complete
+      tags:
+      - Video
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompleteVideoRequest'
+      responses:
+        '200':
+          description: Video generation request completed successfully
+          headers:
+            X-Balance-Remaining:
+              description: Remaining x402 credit balance in USD after this request (only present for x402 auth).
+              required: false
+              schema:
+                type: string
+                example: '4.230000'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    description: Indicates whether the video cleanup was successful.
+                    example: true
+                required:
+                - success
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedError'
+        '401':
+          description: '- Authentication failed
+
+            - This model is only available to Pro users'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '402':
+          description: 'Payment or balance required. Response varies by authentication state:
+
+
+            **API Key users:** Standard error response with `INSUFFICIENT_BALANCE` code. Top up your Venice balance at venice.ai.
+
+
+            **Unauthenticated x402 discovery:** Structured x402 response with `x402Version`, `resource`, `accepts`, and `extensions["sign-in-with-x"]`. The `accepts` array advertises Base and Solana payment requirements.
+
+
+            **Authenticated x402 wallet users with insufficient credit:** Structured response with `PAYMENT_REQUIRED` code containing:
+
+            - `topUpInstructions`: Step-by-step guide to top up via x402 protocol
+
+            - `supportedTokens` / `supportedChains`: Accepted payment methods
+
+            - `siwxChallenge`: Fresh Sign-In-With-X challenge metadata
+
+
+            The `PAYMENT-REQUIRED` header also contains a base64-encoded x402 protocol object with the payment requirements for programmatic discovery.'
+          headers:
+            PAYMENT-REQUIRED:
+              description: Base64-encoded JSON with x402 payment requirements. Present on x402 middleware 402 responses. Decode to choose and sign one accepted payment requirement programmatically.
+              required: false
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/StandardError'
+                - $ref: '#/components/schemas/X402InferencePaymentRequired'
+        '403':
+          $ref: '#/components/responses/ApiKeyIpRestrictedError'
+        '500':
+          description: Inference processing failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+    servers:
+    - url: https://api.venice.ai/api/v1
+  /video/queue:
+    post:
+      description: 'Queue a new video generation request.
+
+
+        **Authentication:** This endpoint accepts either a Bearer API key or a `SIGN-IN-WITH-X` header for x402 wallet-based authentication. The legacy `X-Sign-In-With-X` header is also accepted during migration. When using x402, a `402 Payment Required` response indicates insufficient balance and includes top-up instructions.'
+      operationId: queueVideo
+      security:
+      - BearerAuth: []
+      - siwx: []
+      x-payment-info:
+        price:
+          mode: dynamic
+          currency: USD
+          min: '0.001'
+          max: '10.00'
+        protocols:
+        - x402: {}
+      summary: /api/v1/video/queue
+      tags:
+      - Video
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QueueVideoRequest'
+      responses:
+        '200':
+          description: Video generation request queued successfully
+          headers:
+            X-Balance-Remaining:
+              description: Remaining x402 credit balance in USD after this request (only present for x402 auth).
+              required: false
+              schema:
+                type: string
+                example: '4.230000'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  model:
+                    type: string
+                    description: The ID of the model used for video generation.
+                    example: video-model-123
+                  queue_id:
+                    type: string
+                    description: The ID of the video generation request.
+                    example: 123e4567-e89b-12d3-a456-426614174000
+                  download_url:
+                    type: string
+                    description: Pre-signed URL to download the completed video. Only present for VPS-backed models. When provided, the retrieve endpoint returns JSON status only (no video stream). Fetch this URL after status is COMPLETED to get the video/mp4 file. Valid for 24 hours.
+                required:
+                - model
+                - queue_id
+                additionalProperties: false
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedError'
+        '401':
+          description: '- Authentication failed
+
+            - This model is only available to Pro users'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '402':
+          description: 'Payment or balance required. Response varies by authentication state:
+
+
+            **API Key users:** Standard error response with `INSUFFICIENT_BALANCE` code. Top up your Venice balance at venice.ai.
+
+
+            **Unauthenticated x402 discovery:** Structured x402 response with `x402Version`, `resource`, `accepts`, and `extensions["sign-in-with-x"]`. The `accepts` array advertises Base and Solana payment requirements.
+
+
+            **Authenticated x402 wallet users with insufficient credit:** Structured response with `PAYMENT_REQUIRED` code containing:
+
+            - `topUpInstructions`: Step-by-step guide to top up via x402 protocol
+
+            - `supportedTokens` / `supportedChains`: Accepted payment methods
+
+            - `siwxChallenge`: Fresh Sign-In-With-X challenge metadata
+
+
+            The `PAYMENT-REQUIRED` header also contains a base64-encoded x402 protocol object with the payment requirements for programmatic discovery.'
+          headers:
+            PAYMENT-REQUIRED:
+              description: Base64-encoded JSON with x402 payment requirements. Present on x402 middleware 402 responses. Decode to choose and sign one accepted payment requirement programmatically.
+              required: false
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/StandardError'
+                - $ref: '#/components/schemas/X402InferencePaymentRequired'
+        '403':
+          description: 'The specified model is unavailable in your region. Use of Tor, VPNs, proxies, or other means to circumvent this restriction is a violation of our Terms of Service.
+
+
+            This API key is restricted to configured IP addresses, and this request''s source IP is not allowed'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/StandardError'
+                - $ref: '#/components/schemas/ApiKeyIpRestrictedError'
+        '409':
+          description: Additional consent is required before this request can be queued for some models
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: object
+                    properties:
+                      code:
+                        type: string
+                        enum:
+                        - needs_consent
+                      message:
+                        type: string
+                    required:
+                    - code
+                    - message
+                    additionalProperties: false
+                  consent_flow:
+                    type: string
+                    enum:
+                    - seedance
+                  face_media_roles:
+                    type: array
+                    items:
+                      type: string
+                      enum:
+                      - image
+                      - end_image
+                      - reference_image
+                      - video
+                      - reference_video
+                  consent:
+                    type: object
+                    properties:
+                      consent_version:
+                        type: string
+                      policy_text:
+                        type: string
+                    required:
+                    - consent_version
+                    - policy_text
+                    additionalProperties: false
+                  docs_url:
+                    type: string
+                required:
+                - error
+                - consent_flow
+                - face_media_roles
+                - consent
+                - docs_url
+                additionalProperties: false
+        '413':
+          description: The request payload is too large. Please reduce the size of your request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PayloadTooLargeError'
+        '422':
+          description: Your prompt violates the content policy of Venice.ai or the model provider
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentViolationError'
+        '500':
+          description: Inference processing failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+    servers:
+    - url: https://api.venice.ai/api/v1
+  /video/quote:
+    post:
+      description: Quote a video generation request based on pricing inputs (model, duration, resolution, aspect_ratio, audio). Returns the price in USD.
+      operationId: quoteVideo
+      summary: /api/v1/video/quote
+      tags:
+      - Video
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QuoteVideoRequest'
+      responses:
+        '200':
+          description: Video generation price quote
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quote:
+                    type: number
+                required:
+                - quote
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedError'
+        '403':
+          description: 'The specified model is unavailable in your region. Use of Tor, VPNs, proxies, or other means to circumvent this restriction is a violation of our Terms of Service.
+
+
+            This API key is restricted to configured IP addresses, and this request''s source IP is not allowed'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/StandardError'
+                - $ref: '#/components/schemas/ApiKeyIpRestrictedError'
+    servers:
+    - url: https://api.venice.ai/api/v1
+  /video/retrieve:
+    post:
+      description: 'Retrieve a video generation result. Returns the video file if completed, or a status if the request is still processing.
+
+
+        **Authentication:** This endpoint accepts either a Bearer API key or a `SIGN-IN-WITH-X` header for x402 wallet-based authentication. The legacy `X-Sign-In-With-X` header is also accepted during migration. When using x402, a `402 Payment Required` response indicates insufficient balance and includes top-up instructions.'
+      operationId: retrieveVideo
+      security:
+      - BearerAuth: []
+      - siwx: []
+      x-payment-info:
+        price:
+          mode: dynamic
+          currency: USD
+          min: '0.001'
+          max: '10.00'
+        protocols:
+        - x402: {}
+      summary: /api/v1/video/retrieve
+      tags:
+      - Video
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetrieveVideoRequest'
+      responses:
+        '200':
+          description: Video file if completed, or processing status if still in progress
+          headers:
+            X-Balance-Remaining:
+              description: Remaining x402 credit balance in USD after this request (only present for x402 auth).
+              required: false
+              schema:
+                type: string
+                example: '4.230000'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                    - PROCESSING
+                    - COMPLETED
+                    description: The status of the video generation request.
+                    example: PROCESSING
+                  average_execution_time:
+                    type: number
+                    description: The estimated execution time of the video generation request in milliseconds (P80).
+                    example: 145000
+                  execution_duration:
+                    type: number
+                    description: The current duration of the video generation request in milliseconds.
+                    example: 53200
+                required:
+                - status
+                - average_execution_time
+                - execution_duration
+            video/mp4:
+              schema:
+                format: binary
+                type: string
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedError'
+        '401':
+          description: '- Authentication failed
+
+            - This model is only available to Pro users'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '402':
+          description: 'Payment or balance required. Response varies by authentication state:
+
+
+            **API Key users:** Standard error response with `INSUFFICIENT_BALANCE` code. Top up your Venice balance at venice.ai.
+
+
+            **Unauthenticated x402 discovery:** Structured x402 response with `x402Version`, `resource`, `accepts`, and `extensions["sign-in-with-x"]`. The `accepts` array advertises Base and Solana payment requirements.
+
+
+            **Authenticated x402 wallet users with insufficient credit:** Structured response with `PAYMENT_REQUIRED` code containing:
+
+            - `topUpInstructions`: Step-by-step guide to top up via x402 protocol
+
+            - `supportedTokens` / `supportedChains`: Accepted payment methods
+
+            - `siwxChallenge`: Fresh Sign-In-With-X challenge metadata
+
+
+            The `PAYMENT-REQUIRED` header also contains a base64-encoded x402 protocol object with the payment requirements for programmatic discovery.'
+          headers:
+            PAYMENT-REQUIRED:
+              description: Base64-encoded JSON with x402 payment requirements. Present on x402 middleware 402 responses. Decode to choose and sign one accepted payment requirement programmatically.
+              required: false
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - $ref: '#/components/schemas/StandardError'
+                - $ref: '#/components/schemas/X402InferencePaymentRequired'
+        '403':
+          description: 'The specified model is unavailable in your region. Use of Tor, VPNs, proxies, or other means to circumvent this restriction is a violation of our Terms of Service.
+
+
+            This API key is restricted to configured IP addresses, and this request''s source IP is not allowed'
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/StandardError'
+                - $ref: '#/components/schemas/ApiKeyIpRestrictedError'
+        '404':
+          description: Media could not be found. Request may may be invalid, expired, or deleted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '422':
+          description: The selected model provider rejected this request due to its content policies.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProviderContentPolicyError'
+        '500':
+          description: Inference processing failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '503':
+          description: The model is at capacity. Please try again later.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+    servers:
+    - url: https://api.venice.ai/api/v1
+  /video/transcriptions:
+    post:
+      deprecated: true
+      description: This beta endpoint has been deprecated and is no longer available. It answers every request with a 410. For video analysis, summarization, or questions about a video, use POST /api/v1/chat/completions with the video URL passed as video_url and select a model where model_spec.capabilities.supportsVideoInput is true. Available models and their capabilities can be found via GET /api/v1/models.
+      operationId: createVideoTranscription
+      security: []
+      summary: /api/v1/video/transcriptions
+      tags:
+      - Video
+      responses:
+        '410':
+          description: This beta endpoint has been deprecated and is no longer available. The error message names POST /api/v1/chat/completions with video_url and GET /api/v1/models.
+          headers:
+            Deprecation:
+              schema:
+                description: RFC 9745 flag that this endpoint is deprecated
+                example: 'true'
+                type: string
+            Link:
+              schema:
+                description: Points to chat completions as the replacement and to the models list
+                example: </api/v1/chat/completions>; rel="successor-version"
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+    servers:
+    - url: https://api.venice.ai/api/v1
+components:
+  schemas:
+    QuoteVideoRequest:
+      type: object
+      properties:
+        model:
+          type: string
+          description: The model to get a price quote for.
+          example: seedance-2-0-text-to-video-basic
+        duration:
+          type: string
+          enum:
+          - 1s
+          - 2s
+          - 3s
+          - 4s
+          - 5s
+          - 6s
+          - 7s
+          - 8s
+          - 9s
+          - 10s
+          - 11s
+          - 12s
+          - 13s
+          - 14s
+          - 15s
+          - 16s
+          - 17s
+          - 18s
+          - 19s
+          - 20s
+          - 21s
+          - 22s
+          - 23s
+          - 24s
+          - 25s
+          - 26s
+          - 27s
+          - 28s
+          - 29s
+          - 30s
+          - '-1'
+          - 1 gen
+          - auto
+          - Auto
+          description: The duration of the video. Available options vary by model. For Seedance 2.5 reference-to-video edit jobs, `-1` or `auto` matches output length to the source clip (requires reference_video_urls on queue, or reference_video_total_duration on quote; source must be 4–30s).
+          example: 10s
+        aspect_ratio:
+          type: string
+          enum:
+          - 61
+          - 123
+          - 182
+          - 184
+          - 243
+          - 245
+          - 304
+          - 556
+          - 561
+          - 969
+          - 1269
+          - adaptive
+          - auto
+          description: The aspect ratio. Required for some models with megapixel-rate pricing. For Seedance 2.x reference-to-video edit/extend, `adaptive` or `auto` matches output aspect ratio to the source clip (requires reference_video_urls on queue, or reference_video_total_duration on quote).
+          example: 969
+        resolution:
+          type: string
+          enum:
+          - 256p
+          - 360p
+          - 480p
+          - 540p
+          - 580p
+          - 720p
+          - 1080p
+          - 1440p
+          - 2160p
+          - 2k
+          - 4k
+          - 1x
+          - 2x
+          - 4x
+          - 2K
+          - 480P
+          - 768P
+          - 1080P
+          - true_1080p
+          description: The resolution. Required for models with duration-resolution-rate pricing.
+          example: 720p
+        upscale_factor:
+          type: integer
+          description: For upscale models only. The upscale multiplier the queue request will use (1, 2 or 4); the quote bills the output tier of source height × factor. Defaults to the model's default factor.
+          enum:
+          - 1
+          - 2
+          - 4
+          example: 2
+        enhancement_model:
+          type: string
+          description: For enhancement models only. The provider-side enhancement model. Available values are listed per model in GET /models constraints.topaz.models.
+          example: Proteus
+        target_fps:
+          type: integer
+          description: For enhancement models only. Target FPS for frame interpolation (16-120). Doubles the price on upscaling endpoints when ≥48; scales linearly on interpolation. Omit to keep the source frame rate.
+          example: 60
+        slowdown_factor:
+          type: integer
+          description: 'For enhancement models only (frame interpolation). Slow-motion factor: 2 makes the output twice as long at the target FPS, up to 8x. Multiplies the billed duration.'
+          enum:
+          - 1
+          - 2
+          - 4
+          - 8
+          example: 1
+        audio:
+          type: boolean
+          default: true
+          description: For models which support audio generation and configuration. Defaults to true.
+          example: true
+        video_url:
+          type: string
+          description: For upscale models, the video to upscale. Required to auto-detect duration for pricing.
+          example: data:video/mp4;base64,AAAAFGZ0eXA...
+        reference_video_total_duration:
+          type: number
+          minimum: 0
+          description: For R2V models (e.g. Seedance 2.0 / 2.5 R2V), the aggregate duration in seconds of all reference videos to include in the quote (max 150s; per-clip and family caps vary by model). When provided, the quote reflects the BytePlus 'input with video' rate tier and the (input+output)×pixels token formula. Required when quoting Seedance source-matched duration (`-1`/`auto`) or aspect ratio (`adaptive`/`auto`). When omitted for ordinary fixed-duration quotes, the quote returns the no-reference baseline.
+          example: 5
+      required:
+      - model
+      - duration
+      description: Request body for video price quote. Available fields and valid values vary by model.
+    QueueVideoRequest:
+      type: object
+      properties:
+        model:
+          type: string
+          description: The model to use for video generation.
+          example: seedance-2-0-text-to-video-basic
+        consents:
+          type: object
+          properties:
+            seedance:
+              type: object
+              properties:
+                confirmed_terms_and_privacy:
+                  type: boolean
+                  enum:
+                  - true
+                  description: Confirms acceptance of the current provider policy text returned in the needs_consent response.
+                  example: true
+                confirmed_legal_right:
+                  type: boolean
+                  enum:
+                  - true
+                  description: Confirms the API user has the legal right to use the submitted media.
+                  example: true
+                confirmed_screening_acknowledged:
+                  type: boolean
+                  enum:
+                  - true
+                  description: Acknowledges that submitted media may be screened before processing.
+                  example: true
+              required:
+              - confirmed_terms_and_privacy
+              - confirmed_legal_right
+              - confirmed_screening_acknowledged
+          description: Optional provider-specific consent attestations. Required only for models that return a needs_consent response.
+        prompt:
+          type: string
+          minLength: 1
+          maxLength: 20000
+          description: The prompt to use for video generation. Required for most models; optional for H3 Max Multi-Angle. The maximum length varies by model (default 2500 characters, up to 20000 for some models).
+          example: Commerce being conducted in the city of Venice, Italy.
+        negative_prompt:
+          type: string
+          maxLength: 20000
+          description: Optional negative prompt. The maximum length varies by model (default 2500 characters, up to 20000 for some models).
+          example: low resolution, error, worst quality, low quality, defects
+        duration:
+          type: string
+          enum:
+          - 1s
+          - 2s
+          - 3s
+          - 4s
+          - 5s
+          - 6s
+          - 7s
+          - 8s
+          - 9s
+          - 10s
+          - 11s
+          - 12s
+          - 13s
+          - 14s
+          - 15s
+          - 16s
+          - 17s
+          - 18s
+          - 19s
+          - 20s
+          - 21s
+          - 22s
+          - 23s
+          - 24s
+          - 25s
+          - 26s
+          - 27s
+          - 28s
+          - 29s
+          - 30s
+          - '-1'
+          - 1 gen
+          - auto
+          - Auto
+          description: The duration of the video to generate. Available options vary by model. For Seedance 2.5 reference-to-video edit jobs, `-1` or `auto` matches output length to the source clip (requires reference_video_urls on queue, or reference_video_total_duration on quote; source must be 4–30s).
+          example: 10s
+        aspect_ratio:
+          type: string
+          enum:
+          - 61
+          - 123
+          - 182
+          - 184
+          - 243
+          - 245
+          - 304
+          - 556
+          - 561
+          - 969
+          - 1269
+          - adaptive
+          - auto
+          description: The aspect ratio of the video. Available options vary by model. Some models do not support aspect_ratio. For Seedance 2.x reference-to-video edit/extend, `adaptive` or `auto` matches output aspect ratio to the source clip (requires reference_video_urls on queue, or reference_video_total_duration on quote).
+          example: 969
+        omni_reference_task_type:
+          type: string
+          enum:
+          - auto
+          - reference
+          - edit
+          - extend
+          description: Optional Seedance 2.5 reference-to-video task-type hint forwarded to BytePlus (`auto` | `reference` | `edit` | `extend`). Aliases `editing`→`edit` and `extension`→`extend` are accepted on the queue API. Pre-guides classification to reduce async TaskTypeConstraint errors. The prompt must still match the chosen type. When omitted, Venice infers from the prompt if reference_video_urls are present. Not supported on other models.
+          example: edit
+        resolution:
+          type: string
+          enum:
+          - 256p
+          - 360p
+          - 480p
+          - 540p
+          - 580p
+          - 720p
+          - 1080p
+          - 1440p
+          - 2160p
+          - 2k
+          - 4k
+          - 1x
+          - 2x
+          - 4x
+          - 2K
+          - 480P
+          - 768P
+          - 1080P
+          - true_1080p
+          description: The resolution of the video. Available options vary by model. Some models do not support resolution. Use upscale_factor for upscale models.
+          example: 720p
+        upscale_factor:
+          type: integer
+          description: For upscale models only. 1 = quality enhancement, 2 = double resolution (default), 4 = quadruple.
+          enum:
+          - 1
+          - 2
+          - 4
+          default: 2
+          example: 2
+        enhancement_model:
+          type: string
+          description: For enhancement models only. The provider-side enhancement model. Available values are listed per model in GET /models constraints.topaz.models.
+          example: Proteus
+        target_fps:
+          type: integer
+          description: For enhancement models only. Target FPS for frame interpolation (16-120). Doubles the price on upscaling endpoints when ≥48; scales linearly on interpolation. Omit to keep the source frame rate.
+          example: 60
+        softness:
+          type: number
+          minimum: 1
+          maximum: 5
+          description: For enhancement models only. Softness level (1-5, sharpest to softest).
+          example: 3
+        creativity:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: For enhancement models only. How much new detail the model invents (0.0-1.0).
+          example: 0.5
+        realism:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: For enhancement models only. Bias generated detail toward photorealism (0.0-1.0).
+          example: 0.5
+        sharp:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: For enhancement models only. Output sharpness (0.0 softens, 0.5 neutral, 1.0 strong).
+          example: 0.5
+        compression:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: For enhancement models only. Compression artifact removal level (0.0-1.0).
+          example: 0.5
+        noise:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: For enhancement models only. Noise reduction level (0.0-1.0).
+          example: 0.5
+        halo:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: For enhancement models only. Halo reduction level (0.0-1.0).
+          example: 0.5
+        grain:
+          type: number
+          minimum: 0
+          maximum: 0.1
+          description: For enhancement models only. Film grain amount (0.0-0.1).
+          example: 0
+        recover_detail:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: For enhancement models only. Recover original detail level (0.0-1.0).
+          example: 0.5
+        h264_output:
+          type: boolean
+          description: For enhancement models only. Output H.264 instead of the default H.265.
+          example: false
+        output_format:
+          type: string
+          enum:
+          - mp4
+          - prores
+          description: 'For enhancement models only (SDR-to-HDR). Output container: mp4 (10-bit H265 HDR10) or prores (10-bit ProRes).'
+          example: mp4
+        slowdown_factor:
+          type: integer
+          description: 'For enhancement models only (frame interpolation). Slow-motion factor: 2 makes the output twice as long at the target FPS, up to 8x. Multiplies the billed duration.'
+          enum:
+          - 1
+          - 2
+          - 4
+          - 8
+          example: 1
+        audio:
+          type: boolean
+          default: true
+          description: For models which support audio generation and configuration. Defaults to true.
+          example: true
+        camera_trajectory:
+          type: array
+          items:
+            type: object
+            properties:
+              time:
+                type: number
+                minimum: 0
+                maximum: 1
+              azimuth:
+                type: number
+              elevation:
+                type: number
+                minimum: -90
+                maximum: 90
+              distance:
+                type: number
+                exclusiveMinimum: 0
+            required:
+            - time
+            - azimuth
+            - elevation
+            - distance
+            additionalProperties: false
+          minItems: 2
+          maxItems: 12
+          description: For H3 Max Multi-Angle only. 2–12 camera keyframes with strictly increasing normalized time (0–1), azimuth in degrees (signed; total absolute travel at most 32 turns), elevation in degrees (−90 to 90), and positive distance relative to the initial camera (1 = unchanged). Omit to leave the camera path to the model. Requires image_url; aspect ratio follows that image.
+          example:
+          - time: 0
+            azimuth: 0
+            elevation: 0
+            distance: 1
+          - time: 1
+            azimuth: 45
+            elevation: 10
+            distance: 1
+        image_url:
+          type: string
+          description: For image-to-video models, the reference image. Must be a URL (http/https) or a data URL (data:image/...).
+          example: data:image/png;base64,iVBORw0K...
+        end_image_url:
+          type: string
+          description: For models that support end images or transitions, the end frame image. Must be a URL or data URL.
+          example: data:image/png;base64,iVBORw0K...
+        image_strength:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: How strongly the input image guides an image-to-video generation, from 0 to 1. Supported on models that declare image strength. Omitted values use the provider default (1). Does not change the quoted price.
+          example: 1
+        audio_url:
+          type: string
+          description: 'For models that support audio input, background music. Must be a URL or data URL. Supported: WAV, MP3. Max: 30s, 15MB.'
+          example: data:audio/mpeg;base64,SUQzBAA...
+        video_url:
+          type: string
+          description: 'For models that support video input (video-to-video, upscale). Must be a URL or data URL. Supported: MP4, MOV, WebM.'
+          example: data:video/mp4;base64,AAAAFGZ0eXA...
+        reference_image_urls:
+          type: array
+          items:
+            type: string
+          maxItems: 30
+          description: For models with reference image support, up to 30 images for character/style consistency. Each must be a URL or data URL.
+          example:
+          - data:image/png;base64,iVBORw0K...
+        reference_video_urls:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+          description: 'For models with reference video support (e.g. Seedance 2.0 R2V), up to 10 reference video URLs (`role: "reference_video"`) used to inherit subject motion, camera movement, and overall style. Per-clip 2–15 s, .mp4 or .mov, ≤50 MB; aggregate duration ≤15 s. Each must be a URL or data URL.'
+          example:
+          - https://example.com/reference-clip.mp4
+        reference_audio_urls:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+          description: 'For models with reference audio support (e.g. Seedance 2.0 R2V), up to 10 reference audio URLs (`role: "reference_audio"`) used as donors for vocal timbre, narration, or sound effects. Per-clip 2–15 s, .wav or .mp3; aggregate duration ≤15 s. Must be paired with at least one reference image or reference video — audio-only Reference workflows are rejected at validation. Each must be a URL or data URL.'
+          example:
+          - data:audio/mpeg;base64,SUQzBAAAAAA...
+        reference_document_urls:
+          type: array
+          items:
+            type: string
+          maxItems: 1
+          description: 'For models with document / webpage Omni-Reference (Wan 3.0), up to 1 URL. Document files and public webpage URLs are fetched by Venice and forwarded as `type: "file"` (≤100 MB). Each must be a URL or data URL.'
+          example:
+          - https://example.com/brief.pdf
+        elements:
+          type: array
+          items:
+            type: object
+            properties:
+              frontal_image_url:
+                type: string
+              reference_image_urls:
+                type: array
+                items:
+                  type: string
+                maxItems: 3
+              video_url:
+                type: string
+          maxItems: 4
+          description: For models with advanced element support (e.g., Kling O3 R2V). Up to 4 elements defining characters/objects. Reference in prompt as @Element1, @Element2, etc.
+          example:
+          - frontal_image_url: data:image/png;base64,iVBORw0K...
+            reference_image_urls:
+            - data:image/png;base64,iVBORw0K...
+        scene_image_urls:
+          type: array
+          items:
+            type: string
+          maxItems: 4
+          description: For models with advanced element support. Up to 4 scene reference images. Reference in prompt as @Image1, @Image2, etc.
+          example:
+          - data:image/png;base64,iVBORw0K...
+        keyframes:
+          type: array
+          items:
+            type: object
+            properties:
+              image_url:
+                type: string
+              frame_index:
+                type: integer
+                minimum: 0
+            required:
+            - image_url
+            - frame_index
+          maxItems: 10
+          description: For keyframe-driven models. Up to 10 keyframe images pinned to frame positions in the generated 24 fps video. Each frame_index must be unique and no greater than duration × 24.
+          example:
+          - image_url: data:image/png;base64,iVBORw0K...
+            frame_index: 0
+          - image_url: data:image/png;base64,iVBORw0K...
+            frame_index: 120
+      required:
+      - model
+      - duration
+      description: Request body for video generation. Available fields and valid values vary by model.
+    DetailedError:
+      type: object
+      properties:
+        details:
+          type: object
+          properties: {}
+          description: Details about the incorrect input
+          example:
+            _errors: []
+            field:
+              _errors:
+              - Field is required
+        error:
+          type: string
+          description: A description of the error
+      required:
+      - error
+    CompleteVideoRequest:
+      type: object
+      properties:
+        model:
+          type: string
+          description: The ID of the model used for video generation.
+          example: video-model-123
+        queue_id:
+          type: string
+          description: The ID of the video generation request.
+          example: 123e4567-e89b-12d3-a456-426614174000
+      required:
+      - model
+      - queue_id
+      additionalProperties: false
+    PayloadTooLargeError:
+      type: object
+      properties:
+        code:
+          type: string
+          enum:
+          - PAYLOAD_TOO_LARGE
+          description: Machine-readable error code.
+          example: PAYLOAD_TOO_LARGE
+        error:
+          type: string
+          description: A description of the error
+          example: File exceeds the maximum allowed size of 25 MB.
+      required:
+      - code
+      - error
+    ProviderContentPolicyError:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            message:
+              type: string
+              description: A human-readable explanation of the provider content policy rejection and the recommended next action.
+              example: The selected model provider rejected this request due to its content policies. Credits have been refunded. Try using wan-2-7-text-to-video instead.
+            type:
+              type: string
+              enum:
+              - provider_content_policy
+              description: Machine-readable error type for provider content policy rejections.
+              example: provider_content_policy
+            recommended_model:
+              type: string
+              description: A model ID that can be used as an alternative when a recommendation is available.
+              example: wan-2-7-text-to-video
+            credits_refunded:
+              type: boolean
+              description: Whether credits were refunded for the rejected generation.
+              example: true
+          required:
+          - message
+          - type
+          - credits_refunded
+      required:
+      - error
+    RetrieveVideoRequest:
+      type: object
+      properties:
+        model:
+          type: string
+          description: The ID of the model used for video generation.
+          example: video-model-123
+        queue_id:
+          type: string
+          description: The ID of the video generation request.
+          example: 123e4567-e89b-12d3-a456-426614174000
+        delete_media_on_completion:
+          type: boolean
+          default: false
+          description: If true, the video media will be deleted from storage after the request is completed. If false, you can use the complete endpoint to remove the media once you have successfully downloaded the video.
+          example: false
+      required:
+      - model
+      - queue_id
+      additionalProperties: false
+    X402InferencePaymentRequired:
+      anyOf:
+      - type: object
+        properties:
+          x402Version:
+            type: number
+            description: x402 protocol version.
+            example: 2
+          error:
+            type: string
+            description: Human-readable payment requirement message.
+            example: Payment required
+          resource:
+            type: object
+            properties:
+              url:
+                type: string
+                description: Protected resource URL.
+                example: https://api.venice.ai/api/v1/chat/completions
+              description:
+                type: string
+                description: Human-readable resource description.
+                example: Venice API
+              mimeType:
+                type: string
+                description: Resource MIME type.
+                example: application/json
+            required:
+            - url
+            - description
+            - mimeType
+            additionalProperties: false
+          accepts:
+            type: array
+            items:
+              type: object
+              properties:
+                scheme:
+                  type: string
+                  enum:
+                  - exact
+                  description: x402 payment scheme.
+                  example: exact
+                network:
+                  type: string
+                  description: Payment network for this requirement.
+                  example: solana
+                asset:
+                  type: string
+                  description: USDC token address or mint for the selected network.
+                  example: EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v
+                amount:
+                  type: string
+                  description: Required payment amount in base units (USDC has 6 decimals).
+                  example: '10000000'
+                payTo:
+                  type: string
+                  description: Receiver wallet address for the selected network.
+                  example: 8qUL23aSj7mDWdoLMXGHFvnVCT9wd7jXcysiekroADEL
+                maxTimeoutSeconds:
+                  type: number
+                  description: Maximum time allowed for payment settlement.
+                  example: 300
+                extra:
+                  type: object
+                  properties: {}
+                  description: Network-specific x402 metadata. Solana requirements include a feePayer.
+                  example:
+                    name: USD Coin
+                    version: '2'
+                    feePayer: BFK9TLC3edb13K6v4YyH3DwPb5DSUpkWvb7XnqCL9b4F
+              required:
+              - scheme
+              - network
+              - asset
+              - amount
+              - payTo
+              - maxTimeoutSeconds
+              - extra
+              additionalProperties: false
+            description: Protocol payment requirements. Clients should choose one entry, such as Base or Solana, and sign exactly that requirement.
+          extensions:
+            type: object
+            properties: {}
+            description: Protocol extensions. Inference 402 responses include `sign-in-with-x` with a SIWX challenge for wallet-credit authentication.
+          authOptions:
+            type: object
+            properties:
+              apiKey:
+                type: object
+                properties:
+                  header:
+                    type: string
+                    description: API key authentication header format.
+                    example: 'Authorization: Bearer YOUR_API_KEY'
+                  getKey:
+                    type: string
+                    description: Where to create or manage API keys.
+                    example: https://venice.ai/settings/api
+                  docs:
+                    type: string
+                    description: API key documentation URL.
+                    example: https://docs.venice.ai/api-reference
+                required:
+                - header
+                - getKey
+                - docs
+                additionalProperties: false
+              x402Wallet:
+                type: object
+                properties:
+                  header:
+                    type: string
+                    description: Header used for Sign-In-With-X wallet authentication.
+                    example: SIGN-IN-WITH-X
+                  legacyHeader:
+                    type: string
+                    description: Legacy Sign-In-With-X header accepted during migration.
+                    example: X-Sign-In-With-X
+                  topUp:
+                    type: string
+                    description: Endpoint used to discover and submit x402 top-up payments.
+                    example: POST /api/v1/x402/top-up
+                  docs:
+                    type: string
+                    description: x402 top-up API documentation URL.
+                    example: https://docs.venice.ai/api-reference/endpoint/x402/top-up
+                required:
+                - header
+                - legacyHeader
+                - topUp
+                - docs
+                additionalProperties: false
+            required:
+            - apiKey
+            - x402Wallet
+            additionalProperties: false
+        required:
+        - x402Version
+        - resource
+        - accepts
+        - authOptions
+        additionalProperties: false
+        description: Returned when an inference request has no API key or wallet authentication. The JSON body includes x402 discovery requirements and authentication options.
+      - type: object
+        properties:
+          error:
+            type: string
+            enum:
+            - Payment required
+            description: Error message indicating payment is required.
+          code:
+            type: string
+            enum:
+            - PAYMENT_REQUIRED
+            description: Machine-readable error code.
+          reason:
+            type: string
+            enum:
+            - insufficient_balance
+            description: Reason the x402-authenticated request could not proceed.
+          message:
+            type: string
+            description: Human-readable context about the payment requirement.
+            example: Insufficient x402 balance
+          currentBalanceUsd:
+            type: number
+            description: Current x402 credit balance for the wallet.
+            example: 0.01
+          minimumBalanceUsd:
+            type: number
+            description: Minimum x402 credit balance required before the request can run.
+            example: 0.1
+          description:
+            type: string
+            description: Protected resource description.
+            example: Venice API
+          suggestedTopUpUsd:
+            type: number
+            description: Suggested amount to top up in USD.
+            example: 10
+          minimumTopUpUsd:
+            type: number
+            description: Minimum allowed top-up amount in USD.
+            example: 5
+          supportedTokens:
+            type: array
+            items:
+              type: string
+            description: List of supported token symbols for payment.
+            example:
+            - USDC
+          supportedChains:
+            type: array
+            items:
+              type: string
+            description: List of supported top-up rails.
+            example:
+            - base
+            - solana
+          topUpInstructions:
+            type: object
+            properties:
+              step1:
+                type: string
+                description: 'First step: get payment requirements.'
+                example: POST /api/v1/x402/top-up with no payment header to get payment requirements
+              step2:
+                type: string
+                description: 'Second step: sign the payment.'
+                example: Choose a payment option from accepts and sign a USDC transfer authorization using the x402 SDK (createPaymentHeader)
+              step3:
+                type: string
+                description: 'Third step: submit the payment.'
+                example: POST /api/v1/x402/top-up with the signed PAYMENT-SIGNATURE header
+              receiverWallet:
+                type: string
+                description: Legacy Base receiver wallet address. Prefer the selected accepts entry from /x402/top-up for network-specific payTo values.
+                example: <RECEIVER_WALLET_ADDRESS>
+              tokenAddress:
+                type: string
+                description: Legacy Base USDC token address. Prefer the selected accepts entry from /x402/top-up for network-specific assets.
+                example: <USDC_TOKEN_ADDRESS>
+              tokenDecimals:
+                type: number
+                description: Token decimal places.
+                example: 6
+              network:
+                type: string
+                description: Legacy Base target network. Prefer the selected accepts entry from /x402/top-up for network-specific values.
+                example: eip155:8453
+              minimumAmountUsd:
+                type: number
+                description: Minimum top-up amount in USD.
+                example: 5
+            required:
+            - step1
+            - step2
+            - step3
+            - receiverWallet
+            - tokenAddress
+            - tokenDecimals
+            - network
+            - minimumAmountUsd
+            additionalProperties: false
+          siwxChallenge:
+            type: object
+            properties:
+              info:
+                type: object
+                properties:
+                  domain:
+                    type: string
+                    description: Domain for the SIWX challenge.
+                    example: api.venice.ai
+                  uri:
+                    type: string
+                    description: Resource URI for the challenge.
+                    example: https://api.venice.ai/api/v1/chat/completions
+                  version:
+                    type: string
+                    description: SIWX version.
+                    example: '1'
+                  nonce:
+                    type: string
+                    description: Unique nonce for replay protection.
+                    example: '{{nonce}}'
+                  issuedAt:
+                    type: string
+                    description: ISO timestamp when the challenge was issued.
+                    example: 2026-04-09 12:00:00+00:00
+                  expirationTime:
+                    type: string
+                    description: ISO timestamp when the challenge expires.
+                    example: 2026-04-09 12:05:00+00:00
+                  statement:
+                    type: string
+                    description: Human-readable statement for the signature.
+                    example: Sign in to Venice AI
+                required:
+                - domain
+                - uri
+                - version
+                - nonce
+                - issuedAt
+                - expirationTime
+                - statement
+                additionalProperties: false
+              supportedChains:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    chainId:
+                      type: string
+                      description: Supported chain identity.
+                      example: solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp
+                    type:
+                      type: string
+                      enum:
+                      - eip191
+                      - eip1271
+                      - ed25519
+                      description: Signature type accepted for this chain.
+                      example: ed25519
+                  required:
+                  - chainId
+                  - type
+                  additionalProperties: false
+                description: Supported SIWX chains and signature types.
+            required:
+            - info
+            - supportedChains
+            additionalProperties: false
+        required:
+        - error
+        - code
+        - reason
+        - suggestedTopUpUsd
+        - minimumTopUpUsd
+        - supportedTokens
+        - supportedChains
+        - topUpInstructions
+        - siwxChallenge
+        additionalProperties: false
+    ContentViolationError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: A description of the error
+        suggested_prompt:
+          type: string
+          description: An optional provider-suggested replacement prompt that complies with content policy.
+          example: A cinematic instrumental track inspired by stormy weather and dramatic tension.
+      required:
+      - error
+    ApiKeyIpRestrictedError:
+      type: object
+      properties:
+        error:
+          type: string
+          enum:
+          - This API key is restricted to configured IP addresses, and this request's source IP is not allowed
+          description: A description of the error
+          example: This API key is restricted to configured IP addresses, and this request's source IP is not allowed
+      required:
+      - error
+    StandardError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: A description of the error
+      required:
+      - error
+  responses:
+    ApiKeyIpRestrictedError:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiKeyIpRestrictedError'
+      description: This API key is restricted to configured IP addresses, and this request's source IP is not allowed
+  securitySchemes:
+    BearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
+    siwx:
+      description: 'Wallet-based authentication using the x402 protocol (Sign-In-With-X). Supports EVM SIWE signatures on Base and Ed25519 signatures on Solana mainnet.
+
+
+        **Header format:** Base64-encoded JSON object with the following fields:
+
+        - `address` — EVM or Solana wallet address
+
+        - `message` — Signed SIWX message. EVM wallets use EIP-4361 SIWE; Solana wallets use the Solana SIWX message format.
+
+        - `signature` — Signature of the message, signed by the wallet''s private key. EVM signatures are hex; Solana signatures may be base58 or base64.
+
+        - `timestamp` — Unix timestamp in milliseconds
+
+        - `chainId` — Chain identity. Use `8453`, `"8453"`, or `"eip155:8453"` for Base; use `"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"` for Solana.
+
+        - `type` — Optional signature type. Use `"ed25519"` for Solana. Omitted means EVM/EIP-191 for backward compatibility.
+
+
+        **EVM SIWE message fields:**
+
+        - `domain`: `api.venice.ai`
+
+        - `uri`: `https://api.venice.ai`
+
+        - `version`: `"1"`
+
+        - `chainId`: `8453`
+
+        - `nonce`: Random 16-character hex string
+
+        - `issuedAt` / `expirationTime`: ISO timestamps (recommended TTL: 10 minutes)
+
+        - `statement`: `"Sign in to Venice API"`
+
+
+        **Example (TypeScript):**
+
+        ```
+
+        import { Wallet } from ''ethers''
+
+        import { SiweMessage } from ''siwe''
+
+
+        const wallet = new Wallet(PRIVATE_KEY)
+
+        const msg = new SiweMessage({ domain: ''api.venice.ai'', address: wallet.address, statement: ''Sign in to Venice API'', uri: ''https://api.venice.ai'', version: ''1'', chainId: 8453, nonce: crypto.randomUUID().replace(/-/g, '''').slice(0, 16), issuedAt: new Date().toISOString(), expirationTime: new Date(Date.now() + 600000).toISOString() })
+
+        const signature = await wallet.signMessage(msg.prepareMessage())
+
+        const header = btoa(JSON.stringify({ address: wallet.address, message: msg.prepareMessage(), signature, timestamp: Date.now(), chainId: 8453 }))
+
+        // Set header: SIGN-IN-WITH-X: <header>
+
+        ```
+
+
+        **Solana message fields:** The signed message starts with `<domain> wants you to sign in with your Solana account:`, followed by the wallet address and the standard `URI`, `Version`, `Chain ID`, `Nonce`, `Issued At`, and optional `Expiration Time` fields. Use `type: "ed25519"` and `chainId: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"` in the encoded JSON payload.
+
+
+        **SDK:** `npm install @venice-ai/x402-client` provides `VeniceClient` and `createAuthFetch` which handle this automatically.
+
+
+        **Billing:** x402 users pay from a prepaid USDC credit balance. Top up via `POST /x402/top-up`. When balance is insufficient, endpoints return `402` with structured top-up instructions.'
+      in: header
+      name: SIGN-IN-WITH-X
+      type: apiKey
+externalDocs:
+  description: Venice.ai API documentation
+  url: https://docs.venice.ai
+x-refined-from:
+- venice-ai-swagger.yaml
+- venice-ai-openapi.yml

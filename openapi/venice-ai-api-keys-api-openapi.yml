@@ -1,0 +1,1562 @@
+openapi: 3.2.0
+info:
+  title: Venice Ai API Keys API
+  version: '20261012.214344'
+  termsOfService: https://venice.ai/legal/tos
+  x-guidance: 'Venice.ai is an OpenAI-compatible inference API supporting text, image, audio, and video generation.
+
+
+    **Authentication options:**
+
+    - API Key: Use Bearer token in Authorization header
+
+    - x402 Wallet: Use USDC credits via EVM or Solana wallet (no account required)
+
+
+    **For x402 wallet access:**
+
+    1. POST /x402/top-up without headers to get payment requirements
+
+    2. Choose one of the returned Base or Solana payment options and sign a USDC payment using the x402 SDK
+
+    3. POST /x402/top-up with PAYMENT-SIGNATURE header to add credits
+
+    4. Call any inference endpoint with SIGN-IN-WITH-X header
+
+
+    **Pricing:** Prepaid credits consumed per request. Check /models for available models and their capabilities.'
+  description: 'Operations tagged API Keys across 2 of this provider''s published API definitions: venice-ai-swagger.yaml, venice-ai-openapi.yml. Each path carries the servers of the definition it was published in.'
+servers:
+- url: https://api.venice.ai/api/v1
+security:
+- BearerAuth: []
+tags:
+- name: API Keys
+paths:
+  /api_keys:
+    get:
+      description: Return a list of API keys.
+      operationId: getApiKeys
+      summary: /api/v1/api_keys
+      tags:
+      - API Keys
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        apiKeyType:
+                          type: string
+                          enum:
+                          - INFERENCE
+                          - ADMIN
+                          description: API Key type
+                          example: ADMIN
+                        consumptionLimits:
+                          type: object
+                          properties:
+                            usd:
+                              anyOf:
+                              - type: number
+                                minimum: 0
+                                maximum: 9999999999
+                              - title: 'null'
+                              - title: 'null'
+                              description: USD limit
+                              example: 50
+                            diem:
+                              anyOf:
+                              - type: number
+                                minimum: 0
+                                maximum: 9999999999
+                              - title: 'null'
+                              - title: 'null'
+                              description: Diem limit
+                              example: 10
+                            vcu:
+                              anyOf:
+                              - type: number
+                                minimum: 0
+                                maximum: 9999999999
+                              - title: 'null'
+                              - title: 'null'
+                              description: VCU limit (deprecated - use Diem instead)
+                              deprecated: true
+                              example: 100
+                          description: The API Key consumption limits, evaluated against the window selected by `limitPeriod`.
+                          example:
+                            usd: 50
+                            diem: 10
+                            vcu: 30
+                        limitPeriod:
+                          type: string
+                          enum:
+                          - EPOCH
+                          - MONTH
+                          - LIFETIME
+                          description: Reset window the consumption limits apply to. `EPOCH` resets every UTC day (legacy default). `MONTH` resets on the 1st of each UTC calendar month. `LIFETIME` never resets, so the limit acts as a permanent cap on the key.
+                          example: MONTH
+                        modelPrivacy:
+                          type: string
+                          enum:
+                          - ALL
+                          - PRIVATE_TEXT
+                          - PRIVATE_ONLY
+                          description: Which models this key may call, by privacy tier. `ALL` allows every model. `PRIVATE_TEXT` requires text and embedding models to be Private, TEE, or E2EE while other modalities may be Anonymous or Private. `PRIVATE_ONLY` requires every model to be Private, TEE, or E2EE; Anonymous models are rejected.
+                          example: ALL
+                        createdAt:
+                          type:
+                          - string
+                          - 'null'
+                          description: API Key creation date
+                          example: 2023-10-01 12:00:00+00:00
+                        description:
+                          type: string
+                          description: API Key description
+                          example: Example API Key
+                        expiresAt:
+                          type:
+                          - string
+                          - 'null'
+                          description: API Key expiration date
+                          example: 2023-10-01 12:00:00+00:00
+                        id:
+                          type: string
+                          description: API Key ID
+                          example: e28e82dc-9df2-4b47-b726-d0a222ef2ab5
+                        ipAllowlist:
+                          type: array
+                          items:
+                            type: string
+                          maxItems: 100
+                          description: Globally reachable IPv4 or IPv6 addresses and CIDR subnets allowed to use this key. An empty list allows requests from any IP address. Entries are returned in canonical CIDR notation.
+                          example:
+                          - 11.22.33.44/32
+                          - 11.22.33.0/24
+                          - 2a00:1::/48
+                        last6Chars:
+                          type: string
+                          description: Last 6 characters of the API Key
+                          example: 2V2jNW
+                        lastUsedAt:
+                          type:
+                          - string
+                          - 'null'
+                          description: API Key last used date
+                          example: 2023-10-01 12:00:00+00:00
+                        usage:
+                          type: object
+                          properties:
+                            trailingSevenDays:
+                              type: object
+                              properties:
+                                usd:
+                                  type: string
+                                  description: USD budget usage in the trailing 7 days, including bundled credits
+                                  example: '10.2424'
+                                vcu:
+                                  type: string
+                                  description: VCU usage in the trailing 7 days (deprecated - use Diem instead)
+                                  deprecated: true
+                                  example: '42.2315'
+                                diem:
+                                  type: string
+                                  description: Diem usage in the trailing 7 days
+                                  example: '4.2231'
+                              required:
+                              - usd
+                              - vcu
+                              - diem
+                          required:
+                          - trailingSevenDays
+                        currentPeriodUsage:
+                          type: object
+                          properties:
+                            usd:
+                              type: string
+                              description: USD budget usage in the current limit period, including bundled credits
+                              example: '5.1234'
+                            diem:
+                              type: string
+                              description: Diem usage in the current limit period
+                              example: '2.5000'
+                          required:
+                          - usd
+                          - diem
+                          description: Usage within the current limit period window. Only present for keys that have consumption limits set.
+                      required:
+                      - apiKeyType
+                      - consumptionLimits
+                      - limitPeriod
+                      - modelPrivacy
+                      - createdAt
+                      - expiresAt
+                      - id
+                      - ipAllowlist
+                      - last6Chars
+                      - lastUsedAt
+                      additionalProperties: false
+                    description: List of active API keys
+                  object:
+                    type: string
+                    enum:
+                    - list
+                required:
+                - data
+                - object
+                additionalProperties: false
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '403':
+          $ref: '#/components/responses/ApiKeyIpRestrictedError'
+        '500':
+          description: An unknown error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+    delete:
+      description: Delete an API key.
+      operationId: deleteApiKey
+      parameters:
+      - description: The ID of the API key to delete
+        in: query
+        name: id
+        required: false
+        schema:
+          type: string
+      summary: /api/v1/api_keys
+      tags:
+      - API Keys
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                required:
+                - success
+                additionalProperties: false
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedError'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '403':
+          $ref: '#/components/responses/ApiKeyIpRestrictedError'
+        '500':
+          description: An unknown error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+    post:
+      description: Create a new API key.
+      operationId: createApiKey
+      summary: /api/v1/api_keys
+      tags:
+      - API Keys
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                apiKeyType:
+                  type: string
+                  enum:
+                  - INFERENCE
+                  - ADMIN
+                  description: The API Key type. Admin keys have full access to the API while inference keys are only able to call inference endpoints.
+                  example: ADMIN
+                consumptionLimit:
+                  type: object
+                  properties:
+                    usd:
+                      anyOf:
+                      - type: number
+                        minimum: 0
+                        maximum: 9999999999
+                      - title: 'null'
+                      - title: 'null'
+                      description: USD limit
+                      example: 50
+                    diem:
+                      anyOf:
+                      - type: number
+                        minimum: 0
+                        maximum: 9999999999
+                      - title: 'null'
+                      - title: 'null'
+                      description: Diem limit
+                      example: 10
+                    vcu:
+                      anyOf:
+                      - type: number
+                        minimum: 0
+                        maximum: 9999999999
+                      - title: 'null'
+                      - title: 'null'
+                      description: VCU limit (deprecated - use Diem instead)
+                      deprecated: true
+                      example: 100
+                  description: The API Key consumption limits, evaluated against the window selected by `limitPeriod`.
+                  example:
+                    usd: 50
+                    diem: 10
+                    vcu: 30
+                limitPeriod:
+                  type: string
+                  enum:
+                  - EPOCH
+                  - MONTH
+                  - LIFETIME
+                  description: Reset window the consumption limits apply to. `EPOCH` resets every UTC day (legacy default). `MONTH` resets on the 1st of each UTC calendar month. `LIFETIME` never resets, so the limit acts as a permanent cap on the key.
+                  example: MONTH
+                modelPrivacy:
+                  type: string
+                  enum:
+                  - ALL
+                  - PRIVATE_TEXT
+                  - PRIVATE_ONLY
+                  description: Which models this key may call, by privacy tier. `ALL` allows every model. `PRIVATE_TEXT` requires text and embedding models to be Private, TEE, or E2EE while other modalities may be Anonymous or Private. `PRIVATE_ONLY` requires every model to be Private, TEE, or E2EE; Anonymous models are rejected.
+                  example: ALL
+                description:
+                  type: string
+                  maxLength: 64
+                  description: The API Key description (max 64 characters)
+                  example: Example API Key
+                expiresAt:
+                  anyOf:
+                  - type: string
+                    enum:
+                    - ''
+                  - type: string
+                    pattern: ^\d{4}-\d{2}-\d{2}$
+                  - type: string
+                    pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$
+                  description: The API Key expiration date. If not provided, the key will not expire.
+                  example: 2023-10-01 12:00:00+00:00
+                ipAllowlist:
+                  type: array
+                  items:
+                    type: string
+                    maxLength: 64
+                  maxItems: 100
+                  description: Globally reachable IPv4 or IPv6 addresses and CIDR subnets allowed to use this key. An empty list allows requests from any IP address.
+                  example:
+                  - 11.22.33.44
+                  - 11.22.33.0/24
+                  - 2a00:1::/48
+              required:
+              - apiKeyType
+              - description
+              additionalProperties: false
+              description: The request body for creating a new API key. API key creation is rate limited to 20 requests per minute and a maximum of 500 active API keys per user. VCU (Legacy Diem) is being deprecated in favor of tokenized Diem. Please update your API calls to use Diem instead.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      apiKey:
+                        type: string
+                        description: The API Key. This is only shown once, so make sure to save it somewhere safe.
+                      apiKeyType:
+                        type: string
+                        enum:
+                        - INFERENCE
+                        - ADMIN
+                        description: The API Key type
+                        example: ADMIN
+                      consumptionLimit:
+                        type: object
+                        properties:
+                          usd:
+                            anyOf:
+                            - type: number
+                              minimum: 0
+                              maximum: 9999999999
+                            - title: 'null'
+                            - title: 'null'
+                            description: USD limit
+                            example: 50
+                          diem:
+                            anyOf:
+                            - type: number
+                              minimum: 0
+                              maximum: 9999999999
+                            - title: 'null'
+                            - title: 'null'
+                            description: Diem limit
+                            example: 10
+                          vcu:
+                            anyOf:
+                            - type: number
+                              minimum: 0
+                              maximum: 9999999999
+                            - title: 'null'
+                            - title: 'null'
+                            description: VCU limit (deprecated - use Diem instead)
+                            deprecated: true
+                            example: 100
+                        description: The API Key consumption limits, evaluated against the window selected by `limitPeriod`.
+                        example:
+                          usd: 50
+                          diem: 10
+                          vcu: 30
+                      limitPeriod:
+                        type: string
+                        enum:
+                        - EPOCH
+                        - MONTH
+                        - LIFETIME
+                        description: Reset window the consumption limits apply to. `EPOCH` resets every UTC day (legacy default). `MONTH` resets on the 1st of each UTC calendar month. `LIFETIME` never resets, so the limit acts as a permanent cap on the key.
+                        example: MONTH
+                      modelPrivacy:
+                        type: string
+                        enum:
+                        - ALL
+                        - PRIVATE_TEXT
+                        - PRIVATE_ONLY
+                        description: Which models this key may call, by privacy tier. `ALL` allows every model. `PRIVATE_TEXT` requires text and embedding models to be Private, TEE, or E2EE while other modalities may be Anonymous or Private. `PRIVATE_ONLY` requires every model to be Private, TEE, or E2EE; Anonymous models are rejected.
+                        example: ALL
+                      description:
+                        type: string
+                        description: The API Key description
+                        example: Example API Key
+                      expiresAt:
+                        type:
+                        - string
+                        - 'null'
+                        description: The API Key expiration date
+                        example: 2023-10-01 12:00:00+00:00
+                      id:
+                        type: string
+                        description: The API Key ID
+                        example: e28e82dc-9df2-4b47-b726-d0a222ef2ab5
+                      ipAllowlist:
+                        type: array
+                        items:
+                          type: string
+                        maxItems: 100
+                        description: Globally reachable IPv4 or IPv6 addresses and CIDR subnets allowed to use this key. An empty list allows requests from any IP address. Entries are returned in canonical CIDR notation.
+                        example:
+                        - 11.22.33.44/32
+                        - 11.22.33.0/24
+                        - 2a00:1::/48
+                    required:
+                    - apiKey
+                    - apiKeyType
+                    - consumptionLimit
+                    - limitPeriod
+                    - modelPrivacy
+                    - expiresAt
+                    - id
+                    - ipAllowlist
+                    additionalProperties: false
+                  success:
+                    type: boolean
+                required:
+                - data
+                - success
+                additionalProperties: false
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedError'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '403':
+          $ref: '#/components/responses/ApiKeyIpRestrictedError'
+        '429':
+          description: Rate limit exceeded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '500':
+          description: An unknown error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+    patch:
+      description: Update an existing API key. The description, expiration date, consumption limits, limit period, model privacy, and IP allowlist can be updated.
+      operationId: updateApiKey
+      summary: /api/v1/api_keys
+      tags:
+      - API Keys
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                consumptionLimit:
+                  type: object
+                  properties:
+                    usd:
+                      anyOf:
+                      - type: number
+                        minimum: 0
+                        maximum: 9999999999
+                      - title: 'null'
+                      - title: 'null'
+                      description: USD limit
+                      example: 50
+                    diem:
+                      anyOf:
+                      - type: number
+                        minimum: 0
+                        maximum: 9999999999
+                      - title: 'null'
+                      - title: 'null'
+                      description: Diem limit
+                      example: 10
+                    vcu:
+                      anyOf:
+                      - type: number
+                        minimum: 0
+                        maximum: 9999999999
+                      - title: 'null'
+                      - title: 'null'
+                      description: VCU limit (deprecated - use Diem instead)
+                      deprecated: true
+                      example: 100
+                  description: The API Key consumption limits, evaluated against the window selected by `limitPeriod`.
+                  example:
+                    usd: 50
+                    diem: 10
+                    vcu: 30
+                limitPeriod:
+                  type: string
+                  enum:
+                  - EPOCH
+                  - MONTH
+                  - LIFETIME
+                  description: Reset window the consumption limits apply to. `EPOCH` resets every UTC day (legacy default). `MONTH` resets on the 1st of each UTC calendar month. `LIFETIME` never resets, so the limit acts as a permanent cap on the key.
+                  example: MONTH
+                modelPrivacy:
+                  type: string
+                  enum:
+                  - ALL
+                  - PRIVATE_TEXT
+                  - PRIVATE_ONLY
+                  description: Which models this key may call, by privacy tier. `ALL` allows every model. `PRIVATE_TEXT` requires text and embedding models to be Private, TEE, or E2EE while other modalities may be Anonymous or Private. `PRIVATE_ONLY` requires every model to be Private, TEE, or E2EE; Anonymous models are rejected.
+                  example: ALL
+                description:
+                  type: string
+                  maxLength: 64
+                  description: The API Key description (max 64 characters)
+                  example: Updated API Key Name
+                expiresAt:
+                  anyOf:
+                  - type: string
+                    enum:
+                    - ''
+                  - title: 'null'
+                  - type: string
+                    pattern: ^\d{4}-\d{2}-\d{2}$
+                  - type: string
+                    pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$
+                  - title: 'null'
+                  description: The API Key expiration date. Set to empty string or null to remove expiration.
+                  example: 2023-10-01 12:00:00+00:00
+                id:
+                  type: string
+                  description: The API Key ID to update
+                  example: e28e82dc-9df2-4b47-b726-d0a222ef2ab5
+                ipAllowlist:
+                  type: array
+                  items:
+                    type: string
+                    maxLength: 64
+                  maxItems: 100
+                  description: Globally reachable IPv4 or IPv6 addresses and CIDR subnets allowed to use this key. An empty list allows requests from any IP address.
+                  example:
+                  - 11.22.33.44
+                  - 11.22.33.0/24
+                  - 2a00:1::/48
+              required:
+              - id
+              additionalProperties: false
+              description: The request body for updating an existing API key. The description, expiration date, consumption limits, limit period (epoch / month / lifetime), model privacy, and IP allowlist can be updated.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      apiKeyType:
+                        type: string
+                        enum:
+                        - INFERENCE
+                        - ADMIN
+                        description: The API Key type
+                        example: ADMIN
+                      consumptionLimits:
+                        type: object
+                        properties:
+                          usd:
+                            anyOf:
+                            - type: number
+                              minimum: 0
+                              maximum: 9999999999
+                            - title: 'null'
+                            - title: 'null'
+                            description: USD limit
+                            example: 50
+                          diem:
+                            anyOf:
+                            - type: number
+                              minimum: 0
+                              maximum: 9999999999
+                            - title: 'null'
+                            - title: 'null'
+                            description: Diem limit
+                            example: 10
+                          vcu:
+                            anyOf:
+                            - type: number
+                              minimum: 0
+                              maximum: 9999999999
+                            - title: 'null'
+                            - title: 'null'
+                            description: VCU limit (deprecated - use Diem instead)
+                            deprecated: true
+                            example: 100
+                        description: The API Key consumption limits, evaluated against the window selected by `limitPeriod`.
+                        example:
+                          usd: 50
+                          diem: 10
+                          vcu: 30
+                      limitPeriod:
+                        type: string
+                        enum:
+                        - EPOCH
+                        - MONTH
+                        - LIFETIME
+                        description: Reset window the consumption limits apply to. `EPOCH` resets every UTC day (legacy default). `MONTH` resets on the 1st of each UTC calendar month. `LIFETIME` never resets, so the limit acts as a permanent cap on the key.
+                        example: MONTH
+                      modelPrivacy:
+                        type: string
+                        enum:
+                        - ALL
+                        - PRIVATE_TEXT
+                        - PRIVATE_ONLY
+                        description: Which models this key may call, by privacy tier. `ALL` allows every model. `PRIVATE_TEXT` requires text and embedding models to be Private, TEE, or E2EE while other modalities may be Anonymous or Private. `PRIVATE_ONLY` requires every model to be Private, TEE, or E2EE; Anonymous models are rejected.
+                        example: ALL
+                      createdAt:
+                        type:
+                        - string
+                        - 'null'
+                        description: API Key creation date
+                        example: 2023-10-01 12:00:00+00:00
+                      description:
+                        type: string
+                        description: The API Key description
+                        example: Updated API Key
+                      expiresAt:
+                        type:
+                        - string
+                        - 'null'
+                        description: The API Key expiration date
+                        example: 2023-10-01 12:00:00+00:00
+                      id:
+                        type: string
+                        description: The API Key ID
+                        example: e28e82dc-9df2-4b47-b726-d0a222ef2ab5
+                      ipAllowlist:
+                        type: array
+                        items:
+                          type: string
+                        maxItems: 100
+                        description: Globally reachable IPv4 or IPv6 addresses and CIDR subnets allowed to use this key. An empty list allows requests from any IP address. Entries are returned in canonical CIDR notation.
+                        example:
+                        - 11.22.33.44/32
+                        - 11.22.33.0/24
+                        - 2a00:1::/48
+                      last6Chars:
+                        type: string
+                        description: Last 6 characters of the API Key
+                        example: 2V2jNW
+                      lastUsedAt:
+                        type:
+                        - string
+                        - 'null'
+                        description: API Key last used date
+                        example: 2023-10-01 12:00:00+00:00
+                    required:
+                    - apiKeyType
+                    - consumptionLimits
+                    - limitPeriod
+                    - modelPrivacy
+                    - createdAt
+                    - expiresAt
+                    - id
+                    - ipAllowlist
+                    - last6Chars
+                    - lastUsedAt
+                    additionalProperties: false
+                  success:
+                    type: boolean
+                required:
+                - data
+                - success
+                additionalProperties: false
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DetailedError'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '403':
+          $ref: '#/components/responses/ApiKeyIpRestrictedError'
+        '500':
+          description: An unknown error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+    servers:
+    - url: https://api.venice.ai/api/v1
+  /api_keys/{id}:
+    get:
+      description: Return details about a specific API key, including rate limits and balance data.
+      operationId: getApiKeyById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The ID of the API key to retrieve
+      summary: Get API key details by ID
+      tags:
+      - API Keys
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      apiKeyType:
+                        type: string
+                        enum:
+                        - INFERENCE
+                        - ADMIN
+                        description: API Key type
+                        example: ADMIN
+                      consumptionLimits:
+                        type: object
+                        properties:
+                          usd:
+                            anyOf:
+                            - type: number
+                              minimum: 0
+                              maximum: 9999999999
+                            - title: 'null'
+                            - title: 'null'
+                            description: USD limit
+                            example: 50
+                          diem:
+                            anyOf:
+                            - type: number
+                              minimum: 0
+                              maximum: 9999999999
+                            - title: 'null'
+                            - title: 'null'
+                            description: Diem limit
+                            example: 10
+                          vcu:
+                            anyOf:
+                            - type: number
+                              minimum: 0
+                              maximum: 9999999999
+                            - title: 'null'
+                            - title: 'null'
+                            description: VCU limit (deprecated - use Diem instead)
+                            deprecated: true
+                            example: 100
+                        description: The API Key consumption limits, evaluated against the window selected by `limitPeriod`.
+                        example:
+                          usd: 50
+                          diem: 10
+                          vcu: 30
+                      limitPeriod:
+                        type: string
+                        enum:
+                        - EPOCH
+                        - MONTH
+                        - LIFETIME
+                        description: Reset window the consumption limits apply to. `EPOCH` resets every UTC day (legacy default). `MONTH` resets on the 1st of each UTC calendar month. `LIFETIME` never resets, so the limit acts as a permanent cap on the key.
+                        example: MONTH
+                      modelPrivacy:
+                        type: string
+                        enum:
+                        - ALL
+                        - PRIVATE_TEXT
+                        - PRIVATE_ONLY
+                        description: Which models this key may call, by privacy tier. `ALL` allows every model. `PRIVATE_TEXT` requires text and embedding models to be Private, TEE, or E2EE while other modalities may be Anonymous or Private. `PRIVATE_ONLY` requires every model to be Private, TEE, or E2EE; Anonymous models are rejected.
+                        example: ALL
+                      createdAt:
+                        type:
+                        - string
+                        - 'null'
+                        description: API Key creation date
+                        example: 2023-10-01 12:00:00+00:00
+                      description:
+                        type: string
+                        description: API Key description
+                        example: Example API Key
+                      expiresAt:
+                        type:
+                        - string
+                        - 'null'
+                        description: API Key expiration date
+                        example: 2023-10-01 12:00:00+00:00
+                      id:
+                        type: string
+                        description: API Key ID
+                        example: e28e82dc-9df2-4b47-b726-d0a222ef2ab5
+                      ipAllowlist:
+                        type: array
+                        items:
+                          type: string
+                        maxItems: 100
+                        description: Globally reachable IPv4 or IPv6 addresses and CIDR subnets allowed to use this key. An empty list allows requests from any IP address. Entries are returned in canonical CIDR notation.
+                        example:
+                        - 11.22.33.44/32
+                        - 11.22.33.0/24
+                        - 2a00:1::/48
+                      last6Chars:
+                        type: string
+                        description: Last 6 characters of the API Key
+                        example: 2V2jNW
+                      lastUsedAt:
+                        type:
+                        - string
+                        - 'null'
+                        description: API Key last used date
+                        example: 2023-10-01 12:00:00+00:00
+                      usage:
+                        type: object
+                        properties:
+                          trailingSevenDays:
+                            type: object
+                            properties:
+                              usd:
+                                type: string
+                                description: USD budget usage in the trailing 7 days, including bundled credits
+                                example: '10.2424'
+                              vcu:
+                                type: string
+                                description: VCU usage in the trailing 7 days (deprecated - use Diem instead)
+                                deprecated: true
+                                example: '42.2315'
+                              diem:
+                                type: string
+                                description: Diem usage in the trailing 7 days
+                                example: '4.2231'
+                            required:
+                            - usd
+                            - vcu
+                            - diem
+                        required:
+                        - trailingSevenDays
+                      currentPeriodUsage:
+                        type: object
+                        properties:
+                          usd:
+                            type: string
+                            description: USD budget usage in the current limit period, including bundled credits
+                            example: '5.1234'
+                          diem:
+                            type: string
+                            description: Diem usage in the current limit period
+                            example: '2.5000'
+                        required:
+                        - usd
+                        - diem
+                        description: Usage within the current limit period window. Only present for keys that have consumption limits set.
+                    required:
+                    - apiKeyType
+                    - consumptionLimits
+                    - limitPeriod
+                    - modelPrivacy
+                    - createdAt
+                    - expiresAt
+                    - id
+                    - ipAllowlist
+                    - last6Chars
+                    - lastUsedAt
+                    additionalProperties: false
+                    description: API key details
+                required:
+                - data
+                additionalProperties: false
+                example:
+                  data:
+                    apiKeyType: ADMIN
+                    consumptionLimits:
+                      usd: 50
+                      diem: 10
+                    limitPeriod: MONTH
+                    modelPrivacy: ALL
+                    createdAt: {}
+                    description: Example API Key
+                    expiresAt: {}
+                    id: e28e82dc-9df2-4b47-b726-d0a222ef2ab5
+                    ipAllowlist:
+                    - 11.22.33.44/32
+                    - 12.22.33.0/24
+                    last6Chars: 2V2jNW
+                    lastUsedAt: {}
+                    usage:
+                      trailingSevenDays:
+                        usd: '10.2424'
+                        vcu: '42.2315'
+                        diem: '4.2231'
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '403':
+          $ref: '#/components/responses/ApiKeyIpRestrictedError'
+        '500':
+          description: An unknown error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+    servers:
+    - url: https://api.venice.ai/api/v1
+  /api_keys/rate_limits:
+    get:
+      description: Return details about user balances and rate limits.
+      operationId: getApiKeyRateLimits
+      summary: /api/v1/api_keys/rate_limits
+      tags:
+      - API Keys
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      accessPermitted:
+                        type: boolean
+                        description: Does the API key have access to consume the inference APIs?
+                        example: true
+                      apiTier:
+                        type: object
+                        properties:
+                          id:
+                            type: string
+                            description: The ID of the API tier.
+                            example: paid
+                          isCharged:
+                            type: boolean
+                            description: Is the API key pay per use (in Diem or USD).
+                            example: true
+                        required:
+                        - id
+                        - isCharged
+                      balances:
+                        type: object
+                        properties:
+                          USD:
+                            type: number
+                            description: The USD balance of the key.
+                            example: 50.23
+                          DIEM:
+                            type: number
+                            description: The Diem balance of the key.
+                            example: 100.023
+                          BUNDLED_CREDITS:
+                            type: number
+                            description: The API key's remaining bundled credit balance, denominated in USD. Returns zero if the user's plan does not include bundled credits.
+                            example: 25
+                      keyExpiration:
+                        type:
+                        - string
+                        - 'null'
+                        description: The timestamp the API key expires. If null, the key never expires.
+                        example: 2025-06-01 00:00:00+00:00
+                      nextEpochBegins:
+                        type: string
+                        description: The timestamp when the next epoch begins. This is relevant for rate limits that reset at the start of each epoch.
+                        example: 2025-05-07 00:00:00+00:00
+                      rateLimits:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            apiModelId:
+                              type: string
+                              description: The ID of the API model.
+                              example: zai-org-glm-5-1
+                            rateLimits:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  amount:
+                                    type: number
+                                    description: The rate limit for the API model.
+                                    example: 100
+                                  type:
+                                    type: string
+                                    description: The time period for the rate limit. Can be Requests Per Minute (RPM), Requests Per Day (RPD), or Tokens Per Minute (TPM).
+                                    example: RPM
+                                required:
+                                - amount
+                                - type
+                          required:
+                          - rateLimits
+                    required:
+                    - accessPermitted
+                    - apiTier
+                    - balances
+                    - keyExpiration
+                    - nextEpochBegins
+                    - rateLimits
+                required:
+                - data
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '403':
+          $ref: '#/components/responses/ApiKeyIpRestrictedError'
+        '500':
+          description: An unknown error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+    servers:
+    - url: https://api.venice.ai/api/v1
+  /api_keys/rate_limits/log:
+    get:
+      description: Returns the last 50 rate limits that the account exceeded.
+      operationId: getApiKeyRateLimitLogs
+      summary: /api/v1/api_keys/rate_limits/log
+      tags:
+      - API Keys
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        apiKeyId:
+                          type: string
+                          description: The ID of the API key that exceeded the limit.
+                        modelId:
+                          type: string
+                          default: zai-org-glm-5-1
+                          description: The ID of the model that was used when the rate limit was exceeded.
+                        rateLimitTier:
+                          type: string
+                          description: The API tier of the rate limit.
+                          example: paid
+                        rateLimitType:
+                          type: string
+                          enum:
+                          - RPD
+                          - RPM
+                          - TPM
+                          - FAILED_REQUESTS
+                          - UNSUPPORTED_FEATURE_REQUESTS
+                          description: The type of rate limit that was exceeded. RPM, TPM, and RPD are throughput limits (requests per minute, tokens per minute, requests per day). FAILED_REQUESTS means too many requests returned a non-success status code within the window. UNSUPPORTED_FEATURE_REQUESTS means too many requests asked a model for a feature it does not support.
+                          example: RPM
+                        timestamp:
+                          type: string
+                          description: The timestamp when the rate limit was exceeded.
+                          example: 2023-10-01 12:00:00+00:00
+                      required:
+                      - apiKeyId
+                      - modelId
+                      - rateLimitTier
+                      - rateLimitType
+                      - timestamp
+                      additionalProperties: false
+                    description: The last 50 rate limit logs for the account.
+                  object:
+                    type: string
+                    enum:
+                    - list
+                required:
+                - data
+                - object
+                additionalProperties: false
+        '401':
+          description: Authentication failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+        '403':
+          $ref: '#/components/responses/ApiKeyIpRestrictedError'
+        '500':
+          description: An unknown error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StandardError'
+    servers:
+    - url: https://api.venice.ai/api/v1
+  /api_keys/generate_web3_key:
+    get:
+      description: Returns the token required to generate an API key via a wallet.
+      operationId: getApiKeyGenerateWeb3Key
+      security: []
+      summary: /api/v1/api_keys/generate_web3_key
+      tags:
+      - API Keys
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        description: The token to sign with the wallet
+                        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+                    required:
+                    - token
+                  success:
+                    type: boolean
+                required:
+                - data
+                - success
+    post:
+      description: Authenticates a wallet holding sVVV and creates an API key.
+      operationId: postApiKeyGenerateWeb3Key
+      security: []
+      summary: /api/v1/api_keys/generate_web3_key
+      tags:
+      - API Keys
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                apiKeyType:
+                  type: string
+                  enum:
+                  - INFERENCE
+                  - ADMIN
+                  description: The API Key type. Admin keys have full access to the API while inference keys are only able to call inference endpoints.
+                  example: ADMIN
+                consumptionLimit:
+                  type: object
+                  properties:
+                    usd:
+                      anyOf:
+                      - type: number
+                        minimum: 0
+                        maximum: 9999999999
+                      - title: 'null'
+                      - title: 'null'
+                      description: USD limit
+                      example: 50
+                    diem:
+                      anyOf:
+                      - type: number
+                        minimum: 0
+                        maximum: 9999999999
+                      - title: 'null'
+                      - title: 'null'
+                      description: Diem limit
+                      example: 10
+                    vcu:
+                      anyOf:
+                      - type: number
+                        minimum: 0
+                        maximum: 9999999999
+                      - title: 'null'
+                      - title: 'null'
+                      description: VCU limit (deprecated - use Diem instead)
+                      deprecated: true
+                      example: 100
+                  description: The API Key consumption limits, evaluated against the window selected by `limitPeriod`.
+                  example:
+                    usd: 50
+                    diem: 10
+                    vcu: 30
+                limitPeriod:
+                  type: string
+                  enum:
+                  - EPOCH
+                  - MONTH
+                  - LIFETIME
+                  description: Reset window the consumption limits apply to. `EPOCH` resets every UTC day (legacy default). `MONTH` resets on the 1st of each UTC calendar month. `LIFETIME` never resets, so the limit acts as a permanent cap on the key.
+                  example: MONTH
+                modelPrivacy:
+                  type: string
+                  enum:
+                  - ALL
+                  - PRIVATE_TEXT
+                  - PRIVATE_ONLY
+                  description: Which models this key may call, by privacy tier. `ALL` allows every model. `PRIVATE_TEXT` requires text and embedding models to be Private, TEE, or E2EE while other modalities may be Anonymous or Private. `PRIVATE_ONLY` requires every model to be Private, TEE, or E2EE; Anonymous models are rejected.
+                  example: ALL
+                description:
+                  type: string
+                  default: Web3 API Key
+                  description: The API Key description
+                  example: Web3 API Key
+                expiresAt:
+                  anyOf:
+                  - type: string
+                    enum:
+                    - ''
+                  - type: string
+                    pattern: ^\d{4}-\d{2}-\d{2}$
+                  - type: string
+                    pattern: ^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{3})?Z$
+                  description: The API Key expiration date. If not provided, the key will not expire.
+                  example: 2023-10-01 12:00:00+00:00
+                ipAllowlist:
+                  type: array
+                  items:
+                    type: string
+                    maxLength: 64
+                  maxItems: 100
+                  description: Globally reachable IPv4 or IPv6 addresses and CIDR subnets allowed to use this key. An empty list allows requests from any IP address.
+                  example:
+                  - 11.22.33.44
+                  - 11.22.33.0/24
+                  - 2a00:1::/48
+                address:
+                  type: string
+                  description: The wallet's address
+                  example: '0x45B73055F3aDcC4577Bb709db10B19d11b5c94eE'
+                signature:
+                  type: string
+                  description: The token, signed with the wallet's private key
+                  example: '0xbb5ff2e177f3a97fa553057864ad892eb64120f3eaf9356b4742a10f9a068d42725de895b5e45160b679cbe6961dc4cb552ba10dc97bdd8258d9154810785c451c'
+                token:
+                  type: string
+                  description: The token obtained from https://api.venice.ai/api/v1/api_keys/generate_web3_key
+                  example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c
+              required:
+              - apiKeyType
+              - address
+              - signature
+              - token
+              additionalProperties: false
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      apiKey:
+                        type: string
+                        description: The API Key. This is only shown once, so make sure to save it somewhere safe.
+                      apiKeyType:
+                        type: string
+                        enum:
+                        - INFERENCE
+                        - ADMIN
+                        description: The API Key type
+                        example: ADMIN
+                      consumptionLimit:
+                        type: object
+                        properties:
+                          usd:
+                            anyOf:
+                            - type: number
+                              minimum: 0
+                              maximum: 9999999999
+                            - title: 'null'
+                            - title: 'null'
+                            description: USD limit
+                            example: 50
+                          diem:
+                            anyOf:
+                            - type: number
+                              minimum: 0
+                              maximum: 9999999999
+                            - title: 'null'
+                            - title: 'null'
+                            description: Diem limit
+                            example: 10
+                          vcu:
+                            anyOf:
+                            - type: number
+                              minimum: 0
+                              maximum: 9999999999
+                            - title: 'null'
+                            - title: 'null'
+                            description: VCU limit (deprecated - use Diem instead)
+                            deprecated: true
+                            example: 100
+                        description: The API Key consumption limits, evaluated against the window selected by `limitPeriod`.
+                        example:
+                          usd: 50
+                          diem: 10
+                          vcu: 30
+                      limitPeriod:
+                        type: string
+                        enum:
+                        - EPOCH
+                        - MONTH
+                        - LIFETIME
+                        description: Reset window the consumption limits apply to. `EPOCH` resets every UTC day (legacy default). `MONTH` resets on the 1st of each UTC calendar month. `LIFETIME` never resets, so the limit acts as a permanent cap on the key.
+                        example: MONTH
+                      modelPrivacy:
+                        type: string
+                        enum:
+                        - ALL
+                        - PRIVATE_TEXT
+                        - PRIVATE_ONLY
+                        description: Which models this key may call, by privacy tier. `ALL` allows every model. `PRIVATE_TEXT` requires text and embedding models to be Private, TEE, or E2EE while other modalities may be Anonymous or Private. `PRIVATE_ONLY` requires every model to be Private, TEE, or E2EE; Anonymous models are rejected.
+                        example: ALL
+                      description:
+                        type: string
+                        description: The API Key description
+                        example: Example API Key
+                      expiresAt:
+                        type:
+                        - string
+                        - 'null'
+                        description: The API Key expiration date
+                        example: 2023-10-01 12:00:00+00:00
+                      id:
+                        type: string
+                        description: The API Key ID
+                        example: e28e82dc-9df2-4b47-b726-d0a222ef2ab5
+                      ipAllowlist:
+                        type: array
+                        items:
+                          type: string
+                        maxItems: 100
+                        description: Globally reachable IPv4 or IPv6 addresses and CIDR subnets allowed to use this key. An empty list allows requests from any IP address. Entries are returned in canonical CIDR notation.
+                        example:
+                        - 11.22.33.44/32
+                        - 11.22.33.0/24
+                        - 2a00:1::/48
+                    required:
+                    - apiKey
+                    - apiKeyType
+                    - consumptionLimit
+                    - limitPeriod
+                    - modelPrivacy
+                    - expiresAt
+                    - id
+                    - ipAllowlist
+                    additionalProperties: false
+                  success:
+                    type: boolean
+                required:
+                - data
+                - success
+                additionalProperties: false
+    servers:
+    - url: https://api.venice.ai/api/v1
+components:
+  schemas:
+    DetailedError:
+      type: object
+      properties:
+        details:
+          type: object
+          properties: {}
+          description: Details about the incorrect input
+          example:
+            _errors: []
+            field:
+              _errors:
+              - Field is required
+        error:
+          type: string
+          description: A description of the error
+      required:
+      - error
+    StandardError:
+      type: object
+      properties:
+        error:
+          type: string
+          description: A description of the error
+      required:
+      - error
+    ApiKeyIpRestrictedError:
+      type: object
+      properties:
+        error:
+          type: string
+          enum:
+          - This API key is restricted to configured IP addresses, and this request's source IP is not allowed
+          description: A description of the error
+          example: This API key is restricted to configured IP addresses, and this request's source IP is not allowed
+      required:
+      - error
+  responses:
+    ApiKeyIpRestrictedError:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiKeyIpRestrictedError'
+      description: This API key is restricted to configured IP addresses, and this request's source IP is not allowed
+  securitySchemes:
+    BearerAuth:
+      bearerFormat: JWT
+      scheme: bearer
+      type: http
+    siwx:
+      description: 'Wallet-based authentication using the x402 protocol (Sign-In-With-X). Supports EVM SIWE signatures on Base and Ed25519 signatures on Solana mainnet.
+
+
+        **Header format:** Base64-encoded JSON object with the following fields:
+
+        - `address` — EVM or Solana wallet address
+
+        - `message` — Signed SIWX message. EVM wallets use EIP-4361 SIWE; Solana wallets use the Solana SIWX message format.
+
+        - `signature` — Signature of the message, signed by the wallet''s private key. EVM signatures are hex; Solana signatures may be base58 or base64.
+
+        - `timestamp` — Unix timestamp in milliseconds
+
+        - `chainId` — Chain identity. Use `8453`, `"8453"`, or `"eip155:8453"` for Base; use `"solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"` for Solana.
+
+        - `type` — Optional signature type. Use `"ed25519"` for Solana. Omitted means EVM/EIP-191 for backward compatibility.
+
+
+        **EVM SIWE message fields:**
+
+        - `domain`: `api.venice.ai`
+
+        - `uri`: `https://api.venice.ai`
+
+        - `version`: `"1"`
+
+        - `chainId`: `8453`
+
+        - `nonce`: Random 16-character hex string
+
+        - `issuedAt` / `expirationTime`: ISO timestamps (recommended TTL: 10 minutes)
+
+        - `statement`: `"Sign in to Venice API"`
+
+
+        **Example (TypeScript):**
+
+        ```
+
+        import { Wallet } from ''ethers''
+
+        import { SiweMessage } from ''siwe''
+
+
+        const wallet = new Wallet(PRIVATE_KEY)
+
+        const msg = new SiweMessage({ domain: ''api.venice.ai'', address: wallet.address, statement: ''Sign in to Venice API'', uri: ''https://api.venice.ai'', version: ''1'', chainId: 8453, nonce: crypto.randomUUID().replace(/-/g, '''').slice(0, 16), issuedAt: new Date().toISOString(), expirationTime: new Date(Date.now() + 600000).toISOString() })
+
+        const signature = await wallet.signMessage(msg.prepareMessage())
+
+        const header = btoa(JSON.stringify({ address: wallet.address, message: msg.prepareMessage(), signature, timestamp: Date.now(), chainId: 8453 }))
+
+        // Set header: SIGN-IN-WITH-X: <header>
+
+        ```
+
+
+        **Solana message fields:** The signed message starts with `<domain> wants you to sign in with your Solana account:`, followed by the wallet address and the standard `URI`, `Version`, `Chain ID`, `Nonce`, `Issued At`, and optional `Expiration Time` fields. Use `type: "ed25519"` and `chainId: "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp"` in the encoded JSON payload.
+
+
+        **SDK:** `npm install @venice-ai/x402-client` provides `VeniceClient` and `createAuthFetch` which handle this automatically.
+
+
+        **Billing:** x402 users pay from a prepaid USDC credit balance. Top up via `POST /x402/top-up`. When balance is insufficient, endpoints return `402` with structured top-up instructions.'
+      in: header
+      name: SIGN-IN-WITH-X
+      type: apiKey
+externalDocs:
+  description: Venice.ai API documentation
+  url: https://docs.venice.ai
+x-refined-from:
+- venice-ai-swagger.yaml
+- venice-ai-openapi.yml
