@@ -17,6 +17,17 @@ tags:
 - LLM
 - Image Generation
 - Video Generation
+- Text-to-Speech
+- Embeddings
+- Privacy
+- OpenAI-Compatible
+- x402
+tags_raw:
+- Company
+- Artificial Intelligence
+- LLM
+- Image Generation
+- Video Generation
 - Text To Speech
 - Embeddings
 - Privacy
@@ -115,6 +126,8 @@ apis:
   humanURL: https://docs.venice.ai/api-reference/api-spec
   baseURL: https://api.venice.ai/api/v1
   tags:
+  - APIKeys
+  tags_raw:
   - API Keys
   properties:
   - type: OpenAPI
@@ -483,6 +496,8 @@ apis:
   humanURL: https://docs.venice.ai/api-reference/api-spec
   baseURL: https://api.venice.ai/api/v1
   tags:
+  - Voice
+  tags_raw:
   - Voices
   properties:
   - type: OpenAPI
