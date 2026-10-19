@@ -1,0 +1,12 @@
+{
+ "url": "https://docs.venice.ai/swagger.yaml",
+ "requested_url": "https://docs.venice.ai/swagger.yaml",
+ "status": 200,
+ "content_type": "text/yaml",
+ "bytes": 690917,
+ "sha256": "33fadbe8ada4a18e9f7456e2215b1b428749052cd8fee4a8afb61fde91db7834",
+ "fetched_at": "2026-10-19",
+ "fetched_by": "APIEvangelist-Harvest/1.0 (+https://apievangelist.com)",
+ "match": "equivalent",
+ "note": "Re-fetched from the provider by verify-openapi-sources.py; the provider's current document describes the same operations (Jaccard 1.0), but the bytes differ, so the archive is an earlier or reformatted copy."
+}
