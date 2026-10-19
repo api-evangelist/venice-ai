@@ -8,10 +8,17 @@ source:
 - https://composio.dev/toolkits/venice-ai
 - https://monid.ai/tools/venice-ai
 checked:
+- https://api.nuget.org/v3
 - https://composio.dev/toolkits/venice-ai
+- https://crates.io/api/v1
 - https://monid.ai/tools/venice-ai
 - https://n8n.io/integrations/venice-ai/
 - https://n8n.io/integrations/venice/
+- https://proxy.golang.org
+- https://pypi.org/pypi
+- https://registry.npmjs.org
+- https://repo1.maven.org/maven2
+- https://rubygems.org/api/v1
 - https://zapier.com/apps/venice-ai/integrations
 - https://zapier.com/apps/venice/integrations
 summary: null
@@ -36,4 +43,43 @@ edges:
     detected: '2026-10-15'
   detected_by: sweep-model-routing.py
   first_seen: '2026-10-13'
+- partner_name: npm registry
+  partner: npm
+  partner_match: register
+  type: register
+  direction: provider-built
+  category: official SDK (JavaScript/TypeScript)
+  evidence: https://www.npmjs.com/package/venice-x402-client
+  channel: package-registry
+  relationship: distribution-channel
+  contract_reference:
+    register: npm registry (public registry JSON)
+    spec_file: null
+    language: JavaScript/TypeScript
+    packages:
+    - name: venice-x402-client
+      version: 0.2.0
+      released: '2026-04-12'
+      released_field: modified
+      lapsed: false
+      page: https://www.npmjs.com/package/venice-x402-client
+      repo_leg: domain:venice.ai
+      publisher_leg: email:venice.ai
+      matched_by: domain
+    - name: veniceai-cli
+      version: 2.1.0
+      released: '2026-03-18'
+      released_field: modified
+      lapsed: false
+      page: https://www.npmjs.com/package/veniceai-cli
+      repo_leg: domain:venice.ai
+      publisher_leg: email:venice.ai
+      matched_by: domain
+    current: true
+    signal_note: 'an official package on the registry: distribution, not an integration; lapsed = no release in
+      24 months'
+    detected_by: sweep-official-sdks.py
+    detected: '2026-10-18'
+  detected_by: sweep-official-sdks.py
+  first_seen: '2026-10-18'
 templates: []
