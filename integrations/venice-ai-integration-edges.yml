@@ -9,8 +9,13 @@ source:
 - https://monid.ai/tools/venice-ai
 checked:
 - https://api.nuget.org/v3
+- https://cdn.winget.microsoft.com/cache
 - https://composio.dev/toolkits/venice-ai
 - https://crates.io/api/v1
+- https://formulae.brew.sh/api/cask.json
+- https://formulae.brew.sh/api/formula.json
+- https://github.com/ScoopInstaller/Extras
+- https://github.com/ScoopInstaller/Main
 - https://monid.ai/tools/venice-ai
 - https://n8n.io/integrations/venice-ai/
 - https://n8n.io/integrations/venice/
@@ -24,25 +29,6 @@ checked:
 summary: null
 marketplace_apps: []
 edges:
-- partner_name: OpenAI
-  partner: openai
-  partner_match: domain
-  type: contract
-  channel: provider-built
-  relationship: compatible
-  direction: provider-built
-  evidence: https://github.com/api-evangelist/venice-ai/blob/main/openapi/venice-ai-openapi.yml#L10
-  contract_reference:
-    repo: venice-ai
-    spec_file: venice-ai-openapi.yml
-    property: description
-    value: OpenAI-compatible
-    note: 'venice-ai declares OpenAI compatibility: ''Venice.ai is an OpenAI-compatible inference API supporting
-      text, image,'''
-    detected_by: sweep-model-routing.py
-    detected: '2026-10-15'
-  detected_by: sweep-model-routing.py
-  first_seen: '2026-10-13'
 - partner_name: npm registry
   partner: npm
   partner_match: register
@@ -82,4 +68,53 @@ edges:
     detected: '2026-10-18'
   detected_by: sweep-official-sdks.py
   first_seen: '2026-10-18'
+- partner_name: npm registry
+  partner: npm
+  partner_match: register
+  type: register
+  direction: provider-built
+  category: official CLI (npm registry)
+  evidence: https://www.npmjs.com/package/veniceai-cli
+  channel: package-registry
+  relationship: distribution-channel
+  contract_reference:
+    register: npm registry (public package index)
+    spec_file: null
+    packages:
+    - name: veniceai-cli
+      version: 2.1.0
+      released: '2026-03-18'
+      released_field: modified
+      lapsed: false
+      page: https://www.npmjs.com/package/veniceai-cli
+      cli: bin venice
+      repo_leg: domain:venice.ai
+      publisher_leg: email:venice.ai
+      matched_by: domain
+    current: true
+    signal_note: 'the provider''s own command-line tool on a package manager: distribution, not an integration;
+      lapsed = no release in 24 months or deprecated / disabled by the manager'
+    detected_by: sweep-official-clis.py
+    detected: '2026-10-20'
+  detected_by: sweep-official-clis.py
+  first_seen: '2026-10-20'
+- partner_name: OpenAI
+  partner: openai
+  partner_match: domain
+  type: contract
+  channel: provider-built
+  relationship: compatible
+  direction: provider-built
+  evidence: https://github.com/api-evangelist/venice-ai/blob/main/openapi/venice-ai-openapi.yml#L10
+  contract_reference:
+    repo: venice-ai
+    spec_file: venice-ai-openapi.yml
+    property: description
+    value: OpenAI-compatible
+    note: 'venice-ai declares OpenAI compatibility: ''Venice.ai is an OpenAI-compatible inference API supporting
+      text, image,'''
+    detected_by: sweep-model-routing.py
+    detected: '2026-10-15'
+  detected_by: sweep-model-routing.py
+  first_seen: '2026-10-13'
 templates: []
