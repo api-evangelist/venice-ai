@@ -2027,3 +2027,9 @@ externalDocs:
 x-refined-from:
 - venice-ai-swagger.yaml
 - venice-ai-openapi.yml
+x-provenance:
+  method: harvested
+  publisher: Venice.ai
+  source: https://docs.venice.ai/swagger.yaml
+  note: split by refine-openapis from the provider's own published document, verified by fetch (openapi/_original/*.fetch.json);
+    stamped by stamp-openapi-provenance.py (roadmap#793)
